@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle } from "lucide-react";
+import { loginUser } from "@/lib/api";
 
 export default function Login() {
   const router = useRouter();
@@ -37,23 +38,28 @@ export default function Login() {
     setError(null);
     setIsSubmitting(true);
 
+    // Проверяем введенные данные
+    if (!email.trim() || !password) {
+      setError('Пожалуйста, заполните все поля');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      // Создаем FormData для отправки запроса в соответствии с API
-      const formData = new FormData();
-      formData.append("username", email);
-      formData.append("password", password);
+      console.log('Отправляем запрос авторизации:', { username: email });
 
-      // Отправка запроса на авторизацию
-      const response = await axios.post('/auth/token', formData);
+      // Используем функцию loginUser из нашего API модуля
+      const data = await loginUser(email, password);
+      console.log('Успешный ответ от сервера:', data);
 
-      // Сохранение токена в localStorage
-      localStorage.setItem('auth_token', response.data.access_token);
-      localStorage.setItem('user_role', response.data.role);
+      // Сохранение токена в localStorage (происходит в функции loginUser)
+      localStorage.setItem('auth_token', data.access_token);
+      localStorage.setItem('user_role', data.role);
 
       // Перенаправление на главную страницу или профиль
-      if (response.data.role === 'buyer') {
+      if (data.role === 'buyer') {
         router.push('/'); // Для покупателя - на главную страницу
-      } else if (response.data.role === 'seller') {
+      } else if (data.role === 'seller') {
         router.push('/dashboard'); // Для продавца - в панель управления
       } else {
         router.push('/');
@@ -61,10 +67,18 @@ export default function Login() {
     } catch (error) {
       console.error('Ошибка при входе в систему:', error);
 
-      if (axios.isAxiosError(error) && error.response) {
-        setError(error.response.data.detail || 'Неверные учетные данные');
+      if (axios.isAxiosError(error)) {
+        console.error('Детали ошибки:', error.response);
+
+        if (error.response?.status === 401) {
+          setError('Неверный email или пароль');
+        } else if (error.response?.data?.detail) {
+          setError(error.response.data.detail);
+        } else {
+          setError('Ошибка при авторизации. Повторите попытку.');
+        }
       } else {
-        setError('Произошла ошибка при входе в систему');
+        setError('Произошла ошибка при подключении к серверу');
       }
     } finally {
       setIsSubmitting(false);

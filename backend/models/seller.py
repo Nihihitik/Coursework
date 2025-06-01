@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from uuid import UUID
 from typing import Optional
 
 class SellerBase(BaseModel):
@@ -14,14 +13,14 @@ class SellerCreate(SellerBase):
 
 class SellerInDB(SellerBase):
     """Модель продавца в базе данных"""
-    id: UUID
+    id: int
 
     class Config:
         from_attributes = True
 
 class Seller(SellerBase):
     """Модель продавца для ответа API"""
-    id: UUID
+    id: int
 
     class Config:
         from_attributes = True

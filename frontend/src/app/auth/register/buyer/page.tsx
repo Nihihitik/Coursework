@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { registerBuyer } from "@/lib/api";
 
 export default function RegisterBuyer() {
   const router = useRouter();
@@ -52,9 +53,10 @@ export default function RegisterBuyer() {
     }
   };
 
-  // Обработчик изменения для селектов
-  const handleSelectChange = (name: string, value: string) => {
+  // Обработчик изменения выпадающих списков
+  const handleSelectChange = (value: string, name: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Очистка ошибок при изменении поля
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -68,31 +70,30 @@ export default function RegisterBuyer() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.email) {
+    if (!formData.email.trim()) {
       newErrors.email = "Email обязателен";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Неверный формат email";
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
+      newErrors.email = "Некорректный формат email";
     }
 
     if (!formData.password) {
       newErrors.password = "Пароль обязателен";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Пароль должен содержать не менее 8 символов";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Пароль должен быть не менее 6 символов";
     }
 
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Пароли не совпадают";
     }
 
-    if (!formData.full_name) {
-      newErrors.full_name = "Имя обязательно";
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = "ФИО обязательно";
     }
 
-    if (!formData.contact_info) {
+    if (!formData.contact_info.trim()) {
       newErrors.contact_info = "Контактная информация обязательна";
     }
 
-    // Проверка числовых полей
     if (formData.min_year && isNaN(Number(formData.min_year))) {
       newErrors.min_year = "Должно быть числом";
     }
@@ -129,6 +130,22 @@ export default function RegisterBuyer() {
     setSubmitError(null);
 
     try {
+      console.log('Отправляем данные регистрации покупателя:', {
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.full_name,
+        contact_info: formData.contact_info,
+        preferred_brand: formData.preferred_brand || undefined,
+        preferred_model: formData.preferred_model || undefined,
+        min_year: formData.min_year ? Number(formData.min_year) : undefined,
+        max_year: formData.max_year ? Number(formData.max_year) : undefined,
+        min_power: formData.min_power ? Number(formData.min_power) : undefined,
+        max_power: formData.max_power ? Number(formData.max_power) : undefined,
+        preferred_transmission: formData.preferred_transmission || undefined,
+        preferred_condition: formData.preferred_condition || undefined,
+        max_price: formData.max_price ? Number(formData.max_price) : undefined
+      });
+
       // Подготовка данных для отправки
       const dataToSubmit = {
         email: formData.email,
@@ -146,19 +163,30 @@ export default function RegisterBuyer() {
         max_price: formData.max_price ? Number(formData.max_price) : undefined
       };
 
-      // Отправка запроса на регистрацию
-      const response = await axios.post('/auth/register/buyer', dataToSubmit);
+      // Используем функцию registerBuyer из API
+      const data = await registerBuyer(dataToSubmit);
+      console.log('Успешный ответ от сервера:', data);
 
       // После успешной регистрации перенаправление на страницу входа
       router.push('/auth/login?success=registration');
     } catch (error) {
       console.error('Ошибка при регистрации:', error);
 
-      if (axios.isAxiosError(error) && error.response) {
-        // Обработка ошибок от API
-        setSubmitError(error.response.data.detail || 'Произошла ошибка при регистрации');
+      if (axios.isAxiosError(error)) {
+        // Показываем полную информацию об ошибке
+        console.error('Ответ сервера с ошибкой:', error.response);
+        console.error('Конфигурация запроса:', error.config);
+
+        // Проверяем статус ошибки
+        if (error.response?.status === 0) {
+          setSubmitError('Не удалось соединиться с сервером. Проверьте, запущен ли сервер.');
+        } else if (error.response?.data?.detail) {
+          setSubmitError(error.response.data.detail);
+        } else {
+          setSubmitError('Произошла ошибка при регистрации');
+        }
       } else {
-        setSubmitError('Произошла ошибка при регистрации');
+        setSubmitError('Неизвестная ошибка при регистрации');
       }
     } finally {
       setIsSubmitting(false);
@@ -355,7 +383,7 @@ export default function RegisterBuyer() {
                     <Label htmlFor="preferred_transmission">Тип КПП</Label>
                     <Select
                       value={formData.preferred_transmission}
-                      onValueChange={(value) => handleSelectChange("preferred_transmission", value)}
+                      onValueChange={(value) => handleSelectChange(value, "preferred_transmission")}
                     >
                       <SelectTrigger id="preferred_transmission">
                         <SelectValue placeholder="Выберите КПП" />
@@ -371,7 +399,7 @@ export default function RegisterBuyer() {
                     <Label htmlFor="preferred_condition">Состояние</Label>
                     <Select
                       value={formData.preferred_condition}
-                      onValueChange={(value) => handleSelectChange("preferred_condition", value)}
+                      onValueChange={(value) => handleSelectChange(value, "preferred_condition")}
                     >
                       <SelectTrigger id="preferred_condition">
                         <SelectValue placeholder="Выберите состояние" />

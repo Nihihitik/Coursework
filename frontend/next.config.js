@@ -1,7 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Определяем URL API сервера с возможностью переопределения через переменные окружения
+  publicRuntimeConfig: {
+    apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8000',
+  },
+
   async rewrites() {
     return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8000/:path*', // Добавляем общий префикс /api для всех запросов к API
+      },
       {
         source: '/cars/:path*',
         destination: 'http://localhost:8000/cars/:path*',
