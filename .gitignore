@@ -7,3 +7,4 @@ SchemasInformation.md
 alembic.ini
 env.py
 .vscode
+.pytest_cache
