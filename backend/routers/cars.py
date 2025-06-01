@@ -214,3 +214,39 @@ async def delete_car(
     db.commit()
 
     return {"message": "Автомобиль успешно удален"}
+
+# Функция для получения автомобилей продавца, доступная для импорта
+async def get_seller_cars(
+    current_user = Depends(get_current_seller),
+    db: Session = Depends(get_db)
+):
+    """Получить список автомобилей текущего продавца"""
+    cars = db.query(Car).filter(Car.seller_id == current_user.id).all()
+
+    # Преобразуем в словарь с дополнительной информацией
+    result = []
+    for car in cars:
+        # Десериализуем features из JSON строки в список
+        features = None
+        if car.features:
+            try:
+                features = json.loads(car.features)
+            except json.JSONDecodeError:
+                features = car.features
+
+        car_dict = {
+            "id": car.id,
+            "brand": car.brand,
+            "model": car.model,
+            "year": car.year,
+            "power": car.power,
+            "transmission": car.transmission,
+            "condition": car.condition,
+            "mileage": car.mileage,
+            "features": features,
+            "price": car.price,
+            "store_name": car.store.name if car.store else None
+        }
+        result.append(car_dict)
+
+    return result

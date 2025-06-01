@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,6 +23,9 @@ app.add_middleware(
     allow_headers=["*"],  # Все заголовки
 )
 
+# Создаем подроутер для маршрутов продавца
+seller_router = FastAPI(title="Seller API")
+
 # Подключение роутеров
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(cars.router, prefix="/cars", tags=["cars"])
@@ -31,6 +34,12 @@ app.include_router(favorites.router, prefix="/favorites", tags=["favorites"])
 app.include_router(deals.router, prefix="/deals", tags=["deals"])
 app.include_router(stores.router, prefix="/stores", tags=["stores"])
 app.include_router(queries.router, prefix="/queries", tags=["queries"])
+
+# Подключаем специальный маршрут для получения автомобилей продавца
+@app.get("/seller/cars", tags=["seller"])
+async def get_seller_cars(current_cars = Depends(cars.get_seller_cars)):
+    """Получить список автомобилей текущего продавца"""
+    return current_cars
 
 @app.get("/health")
 async def health_check():
