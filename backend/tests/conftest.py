@@ -4,11 +4,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 from datetime import datetime
+import json
 
 from backend.schemas.base import Base
 from backend.schemas.database import get_db
 from backend.main import app
 from backend.schemas import Buyer, Seller, Car, Store, Deal, Favorite
+from backend.auth import get_password_hash
 
 # Создание тестовой БД
 TEST_DATABASE_URL = "sqlite:///./test.db"
@@ -52,7 +54,7 @@ def test_seller(db_session):
     """Фикстура для создания тестового продавца"""
     seller = Seller(
         email="seller@test.com",
-        password_hash="$2b$12$1I3hLlU5OH1DuXGb4cQSaOQqrZxlf9JEC4jfA4Cyu/oB5ztOvdjAq",  # password
+        password_hash=get_password_hash("password"),
         full_name="Test Seller",
         contact_info="123456789"
     )
@@ -66,7 +68,7 @@ def test_buyer(db_session):
     """Фикстура для создания тестового покупателя"""
     buyer = Buyer(
         email="buyer@test.com",
-        password_hash="$2b$12$1I3hLlU5OH1DuXGb4cQSaOQqrZxlf9JEC4jfA4Cyu/oB5ztOvdjAq",  # password
+        password_hash=get_password_hash("password"),
         full_name="Test Buyer",
         contact_info="987654321",
         preferred_brand="Toyota",
@@ -97,6 +99,8 @@ def test_store(db_session):
 @pytest.fixture(scope="function")
 def test_car(db_session, test_seller, test_store):
     """Фикстура для создания тестового автомобиля"""
+    features = json.dumps(["leather seats", "navigation", "bluetooth"])
+
     car = Car(
         brand="Toyota",
         model="Camry",
@@ -105,7 +109,7 @@ def test_car(db_session, test_seller, test_store):
         transmission="automatic",
         condition="new",
         mileage=5000,
-        features=["leather seats", "navigation", "bluetooth"],
+        features=features,
         price=30000,
         seller_id=test_seller.id,
         store_id=test_store.id

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from uuid import UUID
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Union
 from .base import Transmission, Condition
 
 class CarBase(BaseModel):
@@ -9,31 +9,30 @@ class CarBase(BaseModel):
     model: str
     year: int
     power: int
-    transmission: Transmission
-    condition: Condition
+    transmission: Union[Transmission, str]
+    condition: Union[Condition, str]
     mileage: int
-    features: Optional[Dict[str, Any]] = None
+    features: Optional[List[str]] = None
     price: float
 
 class CarCreate(CarBase):
     """Модель для создания автомобиля"""
-    seller_id: UUID
-    store_id: UUID
+    store_id: int
 
 class CarInDB(CarBase):
     """Модель автомобиля в базе данных"""
-    id: UUID
-    seller_id: UUID
-    store_id: UUID
+    id: int
+    seller_id: int
+    store_id: int
 
     class Config:
         from_attributes = True
 
 class Car(CarBase):
     """Модель автомобиля для ответа API"""
-    id: UUID
-    seller_id: UUID
-    store_id: UUID
+    id: int
+    seller_id: int
+    store_id: int
 
     class Config:
         from_attributes = True

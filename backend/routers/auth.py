@@ -44,15 +44,15 @@ async def register_buyer(buyer: BuyerCreate, db: Session = Depends(get_db)):
         password_hash=get_password_hash(buyer.password),
         full_name=buyer.full_name,
         contact_info=buyer.contact_info,
-        preferred_brand=buyer.preferred_brand,
-        preferred_model=buyer.preferred_model,
-        min_year=buyer.min_year,
-        max_year=buyer.max_year,
-        min_power=buyer.min_power,
-        max_power=buyer.max_power,
-        preferred_transmission=buyer.preferred_transmission,
-        preferred_condition=buyer.preferred_condition,
-        max_price=buyer.max_price
+        preferred_brand=buyer.preferred_brand or None,
+        preferred_model=buyer.preferred_model or None,
+        min_year=buyer.min_year or None,
+        max_year=buyer.max_year or None,
+        min_power=buyer.min_power or None,
+        max_power=buyer.max_power or None,
+        preferred_transmission=buyer.preferred_transmission or None,
+        preferred_condition=buyer.preferred_condition or None,
+        max_price=buyer.max_price or None
     )
     db.add(db_buyer)
     db.commit()

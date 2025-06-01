@@ -1,4 +1,5 @@
 import pytest
+import json
 
 def test_get_all_cars(client, test_car):
     """Тест получения списка всех автомобилей"""
@@ -92,6 +93,10 @@ def test_add_car_unauthorized(client, test_store):
 def test_update_car(client, seller_auth_header, test_car):
     """Тест обновления информации об автомобиле"""
     updated_price = test_car.price + 5000
+
+    # Преобразуем features из JSON-строки в список
+    features = json.loads(test_car.features) if test_car.features else []
+
     response = client.put(
         f"/cars/{test_car.id}",
         json={
@@ -102,7 +107,7 @@ def test_update_car(client, seller_auth_header, test_car):
             "transmission": test_car.transmission,
             "condition": test_car.condition,
             "mileage": test_car.mileage,
-            "features": test_car.features,
+            "features": features,
             "price": updated_price,
             "store_id": test_car.store_id
         },

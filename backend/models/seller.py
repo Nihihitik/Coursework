@@ -9,7 +9,8 @@ class SellerBase(BaseModel):
 
 class SellerCreate(SellerBase):
     """Модель для создания продавца"""
-    user_id: UUID
+    email: str
+    password: str
 
 class SellerInDB(SellerBase):
     """Модель продавца в базе данных"""

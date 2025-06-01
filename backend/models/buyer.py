@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from uuid import UUID
-from typing import Optional
+from typing import Optional, Union
 from .base import Transmission, Condition
 
 class BuyerBase(BaseModel):
@@ -13,24 +13,25 @@ class BuyerBase(BaseModel):
     max_year: Optional[int] = None
     min_power: Optional[int] = None
     max_power: Optional[int] = None
-    preferred_transmission: Optional[Transmission] = None
-    preferred_condition: Optional[Condition] = None
+    preferred_transmission: Optional[Union[Transmission, str]] = None
+    preferred_condition: Optional[Union[Condition, str]] = None
     max_price: Optional[float] = None
 
 class BuyerCreate(BuyerBase):
     """Модель для создания покупателя"""
-    user_id: UUID
+    email: str
+    password: str
 
 class BuyerInDB(BuyerBase):
     """Модель покупателя в базе данных"""
-    id: UUID
+    id: int
 
     class Config:
         from_attributes = True
 
 class Buyer(BuyerBase):
     """Модель покупателя для ответа API"""
-    id: UUID
+    id: int
 
     class Config:
         from_attributes = True

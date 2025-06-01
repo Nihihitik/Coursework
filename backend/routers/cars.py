@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
+import json
 
 from backend.schemas.database import get_db
 from backend.schemas import Car, Store, Deal
@@ -52,6 +53,14 @@ async def get_all_cars(
     # Преобразуем в словарь с дополнительной информацией
     result = []
     for car in cars:
+        # Десериализуем features из JSON строки в список
+        features = None
+        if car.features:
+            try:
+                features = json.loads(car.features)
+            except json.JSONDecodeError:
+                features = car.features
+
         car_dict = {
             "id": car.id,
             "brand": car.brand,
@@ -61,7 +70,7 @@ async def get_all_cars(
             "transmission": car.transmission,
             "condition": car.condition,
             "mileage": car.mileage,
-            "features": car.features,
+            "features": features,
             "price": car.price,
             "seller_name": car.seller.full_name if car.seller else None,
             "store_name": car.store.name if car.store else None
@@ -77,6 +86,14 @@ async def get_car_details(car_id: int, db: Session = Depends(get_db)):
     if not car:
         raise HTTPException(status_code=404, detail="Автомобиль не найден")
 
+    # Десериализуем features из JSON строки в список
+    features = None
+    if car.features:
+        try:
+            features = json.loads(car.features)
+        except json.JSONDecodeError:
+            features = car.features
+
     return {
         "id": car.id,
         "brand": car.brand,
@@ -86,7 +103,7 @@ async def get_car_details(car_id: int, db: Session = Depends(get_db)):
         "transmission": car.transmission,
         "condition": car.condition,
         "mileage": car.mileage,
-        "features": car.features,
+        "features": features,
         "price": car.price,
         "seller": {
             "name": car.seller.full_name,
@@ -111,6 +128,9 @@ async def add_car(
         if not store:
             raise HTTPException(status_code=404, detail="Магазин не найден")
 
+    # Преобразуем список features в JSON строку
+    features_json = json.dumps(car.features) if car.features else None
+
     db_car = Car(
         brand=car.brand,
         model=car.model,
@@ -119,7 +139,7 @@ async def add_car(
         transmission=car.transmission,
         condition=car.condition,
         mileage=car.mileage,
-        features=car.features,
+        features=features_json,
         price=car.price,
         seller_id=current_user.id,
         store_id=car.store_id
@@ -146,6 +166,9 @@ async def update_car(
     if car.seller_id != current_user.id:
         raise HTTPException(status_code=403, detail="У вас нет прав на обновление этого автомобиля")
 
+    # Преобразуем список features в JSON строку
+    features_json = json.dumps(car_update.features) if car_update.features else None
+
     # Обновление полей автомобиля
     car.brand = car_update.brand
     car.model = car_update.model
@@ -154,8 +177,9 @@ async def update_car(
     car.transmission = car_update.transmission
     car.condition = car_update.condition
     car.mileage = car_update.mileage
-    car.features = car_update.features
+    car.features = features_json
     car.price = car_update.price
+    car.store_id = car_update.store_id
 
     db.commit()
     db.refresh(car)
