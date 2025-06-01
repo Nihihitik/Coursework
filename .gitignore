@@ -6,3 +6,4 @@ SchemasInformation.md
 .env
 alembic.ini
 env.py
+.vscode

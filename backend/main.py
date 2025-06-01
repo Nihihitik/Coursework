@@ -1,22 +1,30 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 import uvicorn
-from sqlalchemy.orm import Session
 
-# Импорт схем и зависимостей для базы данных
-from schemas.database import get_db, engine
-from schemas.base import Base
+# Импорт схем и моделей
+from backend.schemas.database import engine
+from backend.schemas.base import Base
 
-# Создание таблиц при запуске приложения
+# Импорт роутеров
+from backend.routers import auth, cars, users, favorites, deals, stores, queries
+
+# Создание всех таблиц при запуске приложения
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Car Dealership API")
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello World"}
+# Подключение роутеров
+app.include_router(auth.router, prefix="/auth", tags=["authentication"])
+app.include_router(cars.router, prefix="/cars", tags=["cars"])
+app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(favorites.router, prefix="/favorites", tags=["favorites"])
+app.include_router(deals.router, prefix="/deals", tags=["deals"])
+app.include_router(stores.router, prefix="/stores", tags=["stores"])
+app.include_router(queries.router, prefix="/queries", tags=["queries"])
 
 @app.get("/health")
-def health_check():
+async def health_check():
+    """Проверка работоспособности API"""
     return {"status": "healthy", "version": "1.0.0"}
 
 if __name__ == "__main__":
