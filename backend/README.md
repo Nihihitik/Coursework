@@ -1,105 +1,157 @@
 # Car Dealership API
 
-Бэкенд-сервис для системы продажи автомобилей на базе FastAPI.
-
-## Требования
-
-- Python 3.8+
-- PostgreSQL
-
-## Установка
-
-1. Клонировать репозиторий:
-
-```bash
-git clone <repository-url>
-cd Coursework/backend
-```
-
-2. Создать и активировать виртуальное окружение:
-
-```bash
-python -m venv venv
-source venv/bin/activate  # для Linux/Mac
-venv\Scripts\activate     # для Windows
-```
-
-3. Установить зависимости:
-
-```bash
-pip install -r requirements.txt
-```
-
-4. Создать файл конфигурации `.env`:
-
-```bash
-cp env.example .env
-```
-
-5. Отредактировать файл `.env`, указав свои настройки базы данных и безопасности.
-
-6. Создать базу данных в PostgreSQL:
-
-```bash
-createdb car_dealership  # или создать через GUI
-```
-
-## Миграции базы данных
-
-1. Инициализировать Alembic (если еще не инициализирован):
-
-```bash
-alembic init migrations
-```
-
-2. Настроить миграции в файле `alembic.ini`, указав правильный URL базы данных.
-
-3. Создать и применить миграции:
-
-```bash
-alembic revision --autogenerate -m "Initial migration"
-alembic upgrade head
-```
-
-## Запуск
-
-```bash
-python main.py
-```
-
-или
-
-```bash
-uvicorn main:app --reload
-```
-
-API будет доступен по адресу http://localhost:8000
-
-## Документация API
-
-После запуска API, документация доступна по следующим адресам:
-- OpenAPI спецификация: http://localhost:8000/openapi.json
-- Swagger UI: http://localhost:8000/docs
-- Redoc: http://localhost:8000/redoc
+API для автосалона, разработанное с использованием FastAPI и SQLAlchemy.
 
 ## Структура проекта
 
 ```
 backend/
-├── migrations/     # Миграции Alembic
-├── models/         # Модели Pydantic
-├── schemas/        # Схемы SQLAlchemy
-├── alembic.ini     # Конфигурация Alembic
-├── auth.py         # Функции аутентификации
-├── main.py         # Точка входа, определения маршрутов API
-└── requirements.txt # Зависимости проекта
+│
+├── routers/                 # Маршруты API по категориям
+│   ├── __init__.py
+│   ├── auth.py              # Авторизация и регистрация
+│   ├── cars.py              # Управление автомобилями
+│   ├── deals.py             # Управление сделками
+│   ├── favorites.py         # Управление избранным
+│   ├── users.py             # Профили пользователей
+│   ├── stores.py            # Управление магазинами
+│   └── queries.py           # Специальные запросы
+│
+├── models/                  # Pydantic модели для API
+│   └── __init__.py
+│
+├── schemas/                 # Модели SQLAlchemy для БД
+│   ├── __init__.py
+│   ├── database.py          # Настройки БД
+│   └── base.py              # Базовая модель
+│
+├── tests/                   # Тесты
+│   ├── __init__.py
+│   ├── conftest.py          # Фикстуры для тестов
+│   ├── test_auth.py         # Тесты авторизации
+│   ├── test_cars.py         # Тесты управления автомобилями
+│   ├── test_deals.py        # Тесты управления сделками
+│   ├── test_favorites.py    # Тесты избранного
+│   ├── test_users.py        # Тесты профилей пользователей
+│   ├── test_stores.py       # Тесты магазинов
+│   ├── test_queries.py      # Тесты специальных запросов
+│   └── test_health.py       # Базовый тест работоспособности
+│
+├── auth.py                  # Функции аутентификации
+├── main.py                  # Основной файл приложения
+├── __init__.py
+├── requirements.txt         # Зависимости проекта
+└── alembic.ini              # Конфигурация миграций
 ```
 
-## Основные функции API
+## Настройка проекта
 
-- Регистрация и авторизация пользователей (покупателей и продавцов)
-- Управление автомобилями (добавление, просмотр, обновление, удаление)
-- Управление избранными автомобилями
-- Создание и управление сделками по покупке автомобилей
-- Управление автосалонами
-- Специальные запросы для анализа рынка
+### Создание виртуальной среды
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+```
+
+### Установка зависимостей
+
+```bash
+pip install -r requirements.txt
+```
+
+### Настройка переменных окружения
+
+Создайте файл `.env` на основе примера `env.example`:
+
+```bash
+cp env.example .env
+```
+
+Откройте файл `.env` и укажите свои значения для переменных окружения:
+
+```
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=car_dealership
+DB_HOST=localhost
+DB_PORT=5432
+SECRET_KEY=your_secret_key
+```
+
+### Миграции базы данных
+
+```bash
+alembic upgrade head
+```
+
+## Запуск сервера
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+После запуска сервер будет доступен по адресу: http://localhost:8000
+
+## Запуск тестов
+
+```bash
+pytest -v
+```
+
+## API документация
+
+После запуска сервера, документация API доступна по адресам:
+
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## Основные эндпоинты API
+
+### Аутентификация
+
+- `POST /auth/register/buyer` - Регистрация нового покупателя
+- `POST /auth/register/seller` - Регистрация нового продавца
+- `POST /auth/token` - Получение токена авторизации
+
+### Автомобили
+
+- `GET /cars` - Список всех автомобилей (с фильтрацией)
+- `GET /cars/{car_id}` - Детальная информация об автомобиле
+- `POST /cars` - Добавление нового автомобиля (только для продавцов)
+- `PUT /cars/{car_id}` - Обновление информации об автомобиле
+- `DELETE /cars/{car_id}` - Удаление автомобиля
+
+### Избранное
+
+- `GET /favorites` - Список избранных автомобилей
+- `POST /favorites/{car_id}` - Добавление автомобиля в избранное
+- `DELETE /favorites/{car_id}` - Удаление автомобиля из избранного
+
+### Сделки
+
+- `POST /deals` - Создание заявки на покупку
+- `GET /deals/my` - Список своих сделок
+- `PUT /deals/{deal_id}/status` - Обновление статуса сделки
+
+### Пользователи
+
+- `GET /users/profile` - Получение информации о текущем пользователе
+
+### Магазины
+
+- `GET /stores` - Список всех магазинов
+- `POST /stores` - Создание нового магазина
+
+### Специальные запросы
+
+- `GET /queries/buyers-for-car` - Покупатели для автомобиля с заданными параметрами
+- `GET /queries/buyers-by-model` - Покупатели, желающие приобрести автомобиль заданной модели
+- `GET /queries/cars-low-mileage` - Автомобили с пробегом меньше 30 тыс. км
+- `GET /queries/new-cars` - Новые автомобили
+- `GET /queries/market-analysis` - Анализ рынка
+- `GET /queries/most-expensive-car` - Самый дорогой автомобиль
+
+### Системные
+
+- `GET /health` - Проверка работоспособности API
