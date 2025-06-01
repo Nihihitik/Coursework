@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { getUserProfile, getSellerCars } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 // Определяем типы данных
 interface Car {
@@ -57,77 +60,87 @@ export default function SellerCars() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-900"></div>
+        <Loader2 className="h-16 w-16 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Мои автомобили</h1>
-          <Link href="/dashboard/seller/cars/add" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition">
-            Добавить автомобиль
-          </Link>
+          <h1 className="text-2xl font-bold">Мои автомобили</h1>
+          <Button asChild>
+            <Link href="/dashboard/seller/cars/add">
+              Добавить автомобиль
+            </Link>
+          </Button>
         </div>
 
         {cars.length === 0 ? (
-          <div className="bg-white shadow-sm rounded-lg p-12 text-center">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">У вас пока нет добавленных автомобилей</h2>
-            <p className="text-gray-500 mb-6">Добавьте свой первый автомобиль для продажи.</p>
-            <Link href="/dashboard/seller/cars/add" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition">
-              Добавить первый автомобиль
-            </Link>
-          </div>
+          <Card className="text-center p-6">
+            <CardContent className="pt-6">
+              <h2 className="text-xl font-semibold mb-4">У вас пока нет добавленных автомобилей</h2>
+              <p className="text-muted-foreground mb-6">Добавьте свой первый автомобиль для продажи.</p>
+              <Button asChild>
+                <Link href="/dashboard/seller/cars/add">
+                  Добавить первый автомобиль
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Автомобиль
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Характеристики
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Цена
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Статус
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Действия
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {cars.map((car) => (
                   <tr key={car.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{car.brand} {car.model}</div>
-                      <div className="text-sm text-gray-500">{car.year} г.</div>
+                      <div className="text-sm font-medium">{car.brand} {car.model}</div>
+                      <div className="text-sm text-muted-foreground">{car.year} г.</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{car.transmission}, {car.condition}</div>
-                      <div className="text-sm text-gray-500">Пробег: {car.mileage} км</div>
+                      <div className="text-sm">{car.transmission}, {car.condition}</div>
+                      <div className="text-sm text-muted-foreground">Пробег: {car.mileage} км</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{car.price?.toLocaleString()} ₽</div>
+                      <div className="text-sm font-medium">{car.price?.toLocaleString()} ₽</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
                         Активно
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link href={`/dashboard/seller/cars/${car.id}/edit`} className="text-indigo-600 hover:text-indigo-900 mr-4">
-                        Редактировать
-                      </Link>
-                      <Link href={`/cars/${car.id}`} className="text-blue-600 hover:text-blue-900">
-                        Просмотр
-                      </Link>
+                      <Button variant="ghost" className="mr-2" asChild>
+                        <Link href={`/dashboard/seller/cars/${car.id}/edit`}>
+                          Редактировать
+                        </Link>
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <Link href={`/cars/${car.id}`}>
+                          Просмотр
+                        </Link>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -137,9 +150,11 @@ export default function SellerCars() {
         )}
 
         <div className="mt-6">
-          <Link href="/dashboard/seller" className="text-blue-600 hover:text-blue-800">
-            ← Назад в панель управления
-          </Link>
+          <Button variant="link" asChild className="px-0">
+            <Link href="/dashboard/seller">
+              ← Назад в панель управления
+            </Link>
+          </Button>
         </div>
       </div>
     </div>
