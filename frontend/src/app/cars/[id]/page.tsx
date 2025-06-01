@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getCarById, addCarToFavorites, removeFromFavorites } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from "sonner";
 
 // Интерфейс для автомобиля
 interface Car {
@@ -30,6 +31,7 @@ interface Car {
   seller_name?: string;
   seller_phone?: string;
   created_at: string;
+  isProcessing?: boolean; // Флаг для отслеживания состояния обработки запроса
 }
 
 export default function CarDetailsPage({ params }: { params: { id: string } }) {
@@ -71,18 +73,39 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
         return;
       }
 
+      // Предотвращаем множественные клики добавлением временного состояния
+      setCar({
+        ...car,
+        isProcessing: true // Временный флаг для предотвращения повторного нажатия
+      });
+
       if (car.is_favorite) {
         await removeFromFavorites(car.id);
+        toast.success("Удалено из избранного", {
+          description: `${car.make} ${car.model} удален из избранного`,
+        });
       } else {
         await addCarToFavorites(car.id);
+        toast.success("Добавлено в избранное", {
+          description: `${car.make} ${car.model} добавлен в избранное`,
+        });
       }
 
       setCar({
         ...car,
-        is_favorite: !car.is_favorite
+        is_favorite: !car.is_favorite,
+        isProcessing: false
       });
     } catch (error) {
       console.error('Ошибка при обновлении избранного:', error);
+      setCar({
+        ...car,
+        isProcessing: false
+      });
+
+      toast.error("Не удалось обновить избранное", {
+        description: "Пожалуйста, попробуйте еще раз позднее",
+      });
     }
   };
 

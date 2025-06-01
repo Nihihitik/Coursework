@@ -22,11 +22,11 @@ interface Car {
 
 // Интерфейс для фильтров
 interface Filters {
-  make?: string;
+  brand?: string;
   minPrice?: number;
   maxPrice?: number;
-  minYear?: number;
-  maxYear?: number;
+  min_year?: number;
+  max_year?: number;
   transmission?: string;
   fuel_type?: string;
 }
@@ -40,21 +40,40 @@ export default function CarsPage() {
   const router = useRouter();
 
   // Получаем список производителей для фильтра
-  const makes = [...new Set(cars.map(car => car.make))].sort();
+  const makes = cars.length ? [...new Set(cars.map(car => car.make).filter(Boolean))].sort() : [];
 
   // Получаем минимальную и максимальную цены для фильтра
-  const minPriceAvailable = cars.length ? Math.min(...cars.map(car => car.price)) : 0;
-  const maxPriceAvailable = cars.length ? Math.max(...cars.map(car => car.price)) : 5000000;
+  const minPriceAvailable = cars.length ? Math.min(...cars.map(car => car.price || 0)) : 0;
+  const maxPriceAvailable = cars.length ? Math.max(...cars.map(car => car.price || 0)) : 5000000;
 
   // Получаем минимальный и максимальный года для фильтра
-  const minYearAvailable = cars.length ? Math.min(...cars.map(car => car.year)) : 2000;
-  const maxYearAvailable = cars.length ? Math.max(...cars.map(car => car.year)) : new Date().getFullYear();
+  const minYearAvailable = cars.length ? Math.min(...cars.map(car => car.year || 2000)) : 2000;
+  const maxYearAvailable = cars.length ? Math.max(...cars.map(car => car.year || new Date().getFullYear())) : new Date().getFullYear();
 
   useEffect(() => {
     const fetchCars = async () => {
       try {
         setLoading(true);
-        const carsData = await getAllCars(filters);
+
+        // Преобразование фильтров для соответствия API
+        const apiFilters = {
+          brand: filters.brand,
+          min_price: filters.minPrice,
+          max_price: filters.maxPrice,
+          min_year: filters.min_year,
+          max_year: filters.max_year,
+          transmission: filters.transmission,
+          fuel_type: filters.fuel_type
+        };
+
+        // Удаление неопределенных значений
+        Object.keys(apiFilters).forEach(key => {
+          if (apiFilters[key] === undefined || apiFilters[key] === '') {
+            delete apiFilters[key];
+          }
+        });
+
+        const carsData = await getAllCars(apiFilters);
         setCars(carsData);
       } catch (error) {
         console.error('Ошибка при загрузке автомобилей:', error);
@@ -73,10 +92,20 @@ export default function CarsPage() {
   }, [filters]);
 
   const handleFilterChange = (name: string, value: any) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      [name]: value
-    }));
+    // Проверяем, не пустое ли значение для числовых полей
+    if ((name === 'minPrice' || name === 'maxPrice' || name === 'min_year' || name === 'max_year') &&
+        (value === '' || value === undefined)) {
+      setFilters(prevFilters => {
+        const newFilters = { ...prevFilters };
+        delete newFilters[name];
+        return newFilters;
+      });
+    } else {
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        [name]: value
+      }));
+    }
   };
 
   const resetFilters = () => {
@@ -143,18 +172,18 @@ export default function CarsPage() {
               <div className="space-y-4">
                 {/* Марка автомобиля */}
                 <div>
-                  <label htmlFor="make" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="brand" className="block text-sm font-medium text-gray-700">
                     Марка
                   </label>
                   <select
-                    id="make"
+                    id="brand"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    value={filters.make || ''}
-                    onChange={(e) => handleFilterChange('make', e.target.value)}
+                    value={filters.brand || ''}
+                    onChange={(e) => handleFilterChange('brand', e.target.value)}
                   >
                     <option value="">Все марки</option>
-                    {makes.map((make) => (
-                      <option key={make} value={make}>
+                    {makes.map((make, index) => (
+                      <option key={make || `empty-${index}`} value={make}>
                         {make}
                       </option>
                     ))}
@@ -199,8 +228,8 @@ export default function CarsPage() {
                         type="number"
                         placeholder="От"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        value={filters.minYear || ''}
-                        onChange={(e) => handleFilterChange('minYear', e.target.value ? parseInt(e.target.value) : undefined)}
+                        value={filters.min_year || ''}
+                        onChange={(e) => handleFilterChange('min_year', e.target.value ? parseInt(e.target.value) : undefined)}
                       />
                     </div>
                     <div>
@@ -208,8 +237,8 @@ export default function CarsPage() {
                         type="number"
                         placeholder="До"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        value={filters.maxYear || ''}
-                        onChange={(e) => handleFilterChange('maxYear', e.target.value ? parseInt(e.target.value) : undefined)}
+                        value={filters.max_year || ''}
+                        onChange={(e) => handleFilterChange('max_year', e.target.value ? parseInt(e.target.value) : undefined)}
                       />
                     </div>
                   </div>
@@ -279,7 +308,7 @@ export default function CarsPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {cars.map((car) => (
-                  <div key={car.id} className="bg-white shadow-sm rounded-lg overflow-hidden hover:shadow-md transition">
+                  <div key={car.id || `car-${Math.random()}`} className="bg-white shadow-sm rounded-lg overflow-hidden hover:shadow-md transition">
                     <div className="relative h-48 bg-gray-200">
                       {car.image_url ? (
                         <img
@@ -319,16 +348,16 @@ export default function CarsPage() {
                         </h3>
                       </Link>
                       <p className="text-xl font-bold text-gray-900 mt-2">
-                        {car.price.toLocaleString()} ₽
+                        {car.price ? car.price.toLocaleString() : 'Цена не указана'} ₽
                       </p>
                       <div className="grid grid-cols-2 gap-2 mt-3">
                         <div>
                           <p className="text-sm text-gray-500">Год выпуска</p>
-                          <p className="text-sm font-medium">{car.year}</p>
+                          <p className="text-sm font-medium">{car.year || 'Не указан'}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Пробег</p>
-                          <p className="text-sm font-medium">{car.mileage.toLocaleString()} км</p>
+                          <p className="text-sm font-medium">{car.mileage ? car.mileage.toLocaleString() : 'Не указан'} км</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">КПП</p>
@@ -336,7 +365,7 @@ export default function CarsPage() {
                             {car.transmission === 'automatic' ? 'Автомат' :
                              car.transmission === 'manual' ? 'Механика' :
                              car.transmission === 'robot' ? 'Робот' :
-                             car.transmission === 'variator' ? 'Вариатор' : car.transmission}
+                             car.transmission === 'variator' ? 'Вариатор' : car.transmission || 'Не указана'}
                           </p>
                         </div>
                         <div>
@@ -346,7 +375,7 @@ export default function CarsPage() {
                              car.fuel_type === 'diesel' ? 'Дизель' :
                              car.fuel_type === 'gas' ? 'Газ' :
                              car.fuel_type === 'hybrid' ? 'Гибрид' :
-                             car.fuel_type === 'electric' ? 'Электро' : car.fuel_type}
+                             car.fuel_type === 'electric' ? 'Электро' : car.fuel_type || 'Не указано'}
                           </p>
                         </div>
                       </div>

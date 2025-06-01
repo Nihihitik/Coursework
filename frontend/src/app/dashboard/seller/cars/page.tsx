@@ -1,12 +1,29 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getUserProfile, getSellerCars } from '@/lib/api';
+import { getUserProfile, getSellerCars, updateCarStatus, getCarById } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, Eye, PenBox } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 // Определяем типы данных
 interface Car {
@@ -20,32 +37,35 @@ interface Car {
   mileage: number;
   features?: any[];
   store_name?: string;
+  status?: 'active' | 'inactive' | 'sold';
 }
 
 export default function SellerCars() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchCarsData = async () => {
-      try {
-        // Загружаем автомобили продавца
-        const carsData = await getSellerCars();
-        if (Array.isArray(carsData)) {
-          setCars(carsData);
-        } else {
-          console.error('Данные автомобилей не являются массивом:', carsData);
-          setCars([]);
-        }
-      } catch (error) {
-        console.error('Ошибка при загрузке автомобилей:', error);
+  const fetchCars = async () => {
+    try {
+      // Загружаем автомобили продавца
+      const carsData = await getSellerCars();
+      if (Array.isArray(carsData)) {
+        setCars(carsData);
+      } else {
+        console.error('Данные автомобилей не являются массивом:', carsData);
         setCars([]);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Ошибка при загрузке автомобилей:', error);
+      setCars([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     // Проверяем токен авторизации
     const token = localStorage.getItem('auth_token');
     const role = localStorage.getItem('user_role');
@@ -53,9 +73,51 @@ export default function SellerCars() {
     if (!token || role !== 'seller') {
       router.push('/auth/login');
     } else {
-      fetchCarsData();
+      fetchCars();
     }
   }, [router]);
+
+  const handlePreview = async (id: number) => {
+    try {
+      const car = await getCarById(id);
+      setSelectedCar(car);
+      setPreviewOpen(true);
+    } catch (error) {
+      console.error('Ошибка при загрузке данных автомобиля:', error);
+    }
+  };
+
+  const handleStatusChange = async (id: number, newStatus: 'active' | 'inactive' | 'sold') => {
+    try {
+      await updateCarStatus(id, newStatus);
+      toast.success("Статус обновлен", {
+        description: `Статус автомобиля изменен на ${newStatus === 'active' ? 'активен' : newStatus === 'inactive' ? 'неактивен' : 'продан'}`,
+      });
+
+      // Обновляем список автомобилей
+      setCars(cars.map(car =>
+        car.id === id ? { ...car, status: newStatus } : car
+      ));
+    } catch (error) {
+      console.error('Ошибка при обновлении статуса:', error);
+      toast.error("Ошибка", {
+        description: "Не удалось обновить статус автомобиля",
+      });
+    }
+  };
+
+  const getStatusBadge = (status?: string) => {
+    switch(status) {
+      case 'active':
+        return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Активен</Badge>;
+      case 'inactive':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-400">Неактивен</Badge>;
+      case 'sold':
+        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Продан</Badge>;
+      default:
+        return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Активен</Badge>;
+    }
+  };
 
   if (loading) {
     return (
@@ -126,21 +188,47 @@ export default function SellerCars() {
                       <div className="text-sm font-medium">{car.price?.toLocaleString()} ₽</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        Активно
-                      </span>
+                      {getStatusBadge(car.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button variant="ghost" className="mr-2" asChild>
-                        <Link href={`/dashboard/seller/cars/${car.id}/edit`}>
-                          Редактировать
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild>
-                        <Link href={`/cars/${car.id}`}>
-                          Просмотр
-                        </Link>
-                      </Button>
+                      <div className="flex justify-end space-x-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              Статус <ChevronDown className="ml-1 h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleStatusChange(car.id, 'active')}>
+                              Активен
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(car.id, 'inactive')}>
+                              Неактивен
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(car.id, 'sold')}>
+                              Продан
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handlePreview(car.id)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          asChild
+                        >
+                          <Link href={`/dashboard/seller/cars/${car.id}/edit`}>
+                            <PenBox className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -157,6 +245,102 @@ export default function SellerCars() {
           </Button>
         </div>
       </div>
+
+      {/* Модальное окно предпросмотра */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Предпросмотр автомобиля</DialogTitle>
+            <DialogDescription>
+              {selectedCar?.brand} {selectedCar?.model}, {selectedCar?.year} г.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedCar && (
+            <div className="space-y-4 py-4">
+              <div className="grid gap-2">
+                <h4 className="font-medium">Основная информация</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Марка и модель</p>
+                    <p>{selectedCar.brand} {selectedCar.model}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Год выпуска</p>
+                    <p>{selectedCar.year}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Цена</p>
+                    <p className="font-medium">{selectedCar.price?.toLocaleString()} ₽</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Состояние</p>
+                    <p>{selectedCar.condition}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <h4 className="font-medium">Технические характеристики</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Трансмиссия</p>
+                    <p>{selectedCar.transmission}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Пробег</p>
+                    <p>{selectedCar.mileage?.toLocaleString()} км</p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedCar.features && selectedCar.features.length > 0 && (
+                <div className="grid gap-2">
+                  <h4 className="font-medium">Особенности</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCar.features.map((feature, index) => (
+                      <Badge variant="outline" key={index}>
+                        {feature}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid gap-2">
+                <h4 className="font-medium">Статус</h4>
+                <div>{getStatusBadge(selectedCar.status)}</div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setPreviewOpen(false)}
+            >
+              Закрыть
+            </Button>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                asChild
+              >
+                <Link href={`/cars/${selectedCar?.id}`} target="_blank">
+                  Открыть страницу
+                </Link>
+              </Button>
+              <Button
+                asChild
+              >
+                <Link href={`/dashboard/seller/cars/${selectedCar?.id}/edit`}>
+                  Редактировать
+                </Link>
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

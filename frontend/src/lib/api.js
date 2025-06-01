@@ -88,13 +88,35 @@ export const getCarById = async (id) => {
 };
 
 export const addCarToFavorites = async (carId) => {
-  const response = await api.post('/favorites', { car_id: carId });
-  return response.data;
+  try {
+    console.log('Добавляем автомобиль в избранное:', carId);
+    const response = await api.post('/favorites', { car_id: carId });
+    console.log('Ответ сервера после добавления в избранное:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при добавлении автомобиля в избранное:', error);
+    if (error.response) {
+      console.error('Статус ответа:', error.response.status);
+      console.error('Данные ответа:', error.response.data);
+    }
+    throw error; // Перебрасываем ошибку дальше для обработки
+  }
 };
 
 export const removeFromFavorites = async (carId) => {
-  const response = await api.delete(`/favorites/${carId}`);
-  return response.data;
+  try {
+    console.log('Удаляем автомобиль из избранного:', carId);
+    const response = await api.delete(`/favorites/${carId}`);
+    console.log('Ответ сервера после удаления из избранного:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при удалении автомобиля из избранного:', error);
+    if (error.response) {
+      console.error('Статус ответа:', error.response.status);
+      console.error('Данные ответа:', error.response.data);
+    }
+    throw error; // Перебрасываем ошибку дальше для обработки
+  }
 };
 
 export const getUserFavorites = async () => {
@@ -111,6 +133,12 @@ export const addCar = async (carData) => {
 
 export const updateCar = async (id, carData) => {
   const response = await api.put(`/cars/${id}`, carData);
+  return response.data;
+};
+
+// Функция для обновления статуса автомобиля
+export const updateCarStatus = async (id, status) => {
+  const response = await api.patch(`/cars/${id}/status`, { status });
   return response.data;
 };
 
