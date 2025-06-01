@@ -1,4 +1,8 @@
 .cursor
 venv
 __pycache__
-BackendInformation.md
+ModelsInformation.md
+SchemasInformation.md
+.env
+alembic.ini
+env.py
