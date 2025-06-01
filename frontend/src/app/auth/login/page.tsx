@@ -56,13 +56,13 @@ export default function Login() {
       localStorage.setItem('auth_token', data.access_token);
       localStorage.setItem('user_role', data.role);
 
-      // Перенаправление на главную страницу или профиль
+      // Перенаправление на основе роли пользователя
       if (data.role === 'buyer') {
-        router.push('/'); // Для покупателя - на главную страницу
+        router.push('/dashboard/buyer'); // Для покупателя - на дашборд покупателя
       } else if (data.role === 'seller') {
-        router.push('/dashboard'); // Для продавца - в панель управления
+        router.push('/dashboard/seller'); // Для продавца - на дашборд продавца
       } else {
-        router.push('/');
+        router.push('/dashboard'); // Для других ролей - на общий дашборд
       }
     } catch (error) {
       console.error('Ошибка при входе в систему:', error);

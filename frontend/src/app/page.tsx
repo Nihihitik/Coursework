@@ -84,13 +84,13 @@ export default function Home() {
   }, [filters]);
 
   // Фильтрация автомобилей по поисковому запросу
-  const filteredCars = cars.filter((car) => {
+  const filteredCars = Array.isArray(cars) ? cars.filter((car) => {
     const searchTermLower = searchTerm.toLowerCase();
     return (
       car.brand.toLowerCase().includes(searchTermLower) ||
       car.model.toLowerCase().includes(searchTermLower)
     );
-  });
+  }) : [];
 
   // Функция обновления фильтров
   const updateFilter = (key: keyof Filters, value: any) => {

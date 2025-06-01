@@ -76,4 +76,72 @@ export const getUserProfile = async () => {
   return response.data;
 };
 
+// Функции для работы с автомобилями
+export const getAllCars = async (filters = {}) => {
+  const response = await api.get('/cars', { params: filters });
+  return response.data;
+};
+
+export const getCarById = async (id) => {
+  const response = await api.get(`/cars/${id}`);
+  return response.data;
+};
+
+export const addCarToFavorites = async (carId) => {
+  const response = await api.post('/favorites', { car_id: carId });
+  return response.data;
+};
+
+export const removeFromFavorites = async (carId) => {
+  const response = await api.delete(`/favorites/${carId}`);
+  return response.data;
+};
+
+export const getUserFavorites = async () => {
+  const response = await api.get('/favorites');
+  return response.data;
+};
+
+// Функции для продавцов
+export const addCar = async (carData) => {
+  console.log('Данные перед отправкой на сервер:', carData);
+  const response = await api.post('/cars', carData);
+  return response.data;
+};
+
+export const updateCar = async (id, carData) => {
+  const response = await api.put(`/cars/${id}`, carData);
+  return response.data;
+};
+
+export const deleteCar = async (id) => {
+  const response = await api.delete(`/cars/${id}`);
+  return response.data;
+};
+
+export const getSellerCars = async () => {
+  const response = await api.get('/seller/cars');
+  return response.data;
+};
+
+// Функции для работы с магазинами
+export const getAllStores = async () => {
+  const response = await api.get('/stores');
+  return response.data;
+};
+
+export const createStore = async (storeData) => {
+  console.log('API: Отправляемые данные магазина:', storeData);
+
+  // Отправляем данные как параметры запроса, а не как JSON-тело
+  const response = await api.post('/stores', null, {
+    params: {
+      name: storeData.name,
+      address: storeData.address
+    }
+  });
+
+  return response.data;
+};
+
 export default api;

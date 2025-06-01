@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { registerBuyer } from "@/lib/api";
+import { registerBuyer, loginUser } from "@/lib/api";
 
 export default function RegisterBuyer() {
   const router = useRouter();
@@ -167,8 +167,22 @@ export default function RegisterBuyer() {
       const data = await registerBuyer(dataToSubmit);
       console.log('Успешный ответ от сервера:', data);
 
-      // После успешной регистрации перенаправление на страницу входа
+      // После регистрации автоматически авторизуем пользователя
+      try {
+        // Вызываем функцию loginUser из api.js для авторизации
+        const loginData = await loginUser(formData.email, formData.password);
+
+        // Сохраняем токен и роль пользователя
+        localStorage.setItem('auth_token', loginData.access_token);
+        localStorage.setItem('user_role', loginData.role);
+
+        // Перенаправляем на дашборд покупателя
+        router.push('/dashboard/buyer');
+      } catch (loginError) {
+        console.error('Ошибка при автоматической авторизации:', loginError);
+        // В случае ошибки при автоматическом входе, перенаправляем на страницу входа
       router.push('/auth/login?success=registration');
+      }
     } catch (error) {
       console.error('Ошибка при регистрации:', error);
 
