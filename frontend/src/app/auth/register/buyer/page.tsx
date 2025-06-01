@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function RegisterBuyer() {
   const router = useRouter();
+  const [showPreferences, setShowPreferences] = useState(false);
 
   // Состояние для данных формы
   const [formData, setFormData] = useState({
@@ -163,10 +165,15 @@ export default function RegisterBuyer() {
     }
   };
 
+  // Переключение видимости секции предпочтений
+  const togglePreferences = () => {
+    setShowPreferences(!showPreferences);
+  };
+
   return (
-    <div className="container max-w-lg mx-auto p-6">
+    <div className="container max-w-2xl mx-auto py-8 px-4">
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-6">
           <CardTitle className="text-2xl text-center">Регистрация покупателя</CardTitle>
           <CardDescription className="text-center">
             Создайте аккаунт, чтобы начать поиск идеального автомобиля
@@ -174,212 +181,227 @@ export default function RegisterBuyer() {
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {submitError && (
               <div className="bg-destructive/10 text-destructive p-3 rounded-md text-center">
                 {submitError}
               </div>
             )}
 
-            {/* Основные данные */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email*</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="example@mail.com"
-                className={errors.email ? "border-destructive" : ""}
-              />
-              {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Пароль*</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={errors.password ? "border-destructive" : ""}
-              />
-              {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Подтверждение пароля*</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={errors.confirmPassword ? "border-destructive" : ""}
-              />
-              {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="full_name">ФИО*</Label>
-              <Input
-                id="full_name"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleChange}
-                placeholder="Иванов Иван Иванович"
-                className={errors.full_name ? "border-destructive" : ""}
-              />
-              {errors.full_name && <p className="text-destructive text-sm">{errors.full_name}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contact_info">Телефон*</Label>
-              <Input
-                id="contact_info"
-                name="contact_info"
-                value={formData.contact_info}
-                onChange={handleChange}
-                placeholder="+7 (999) 123-45-67"
-                className={errors.contact_info ? "border-destructive" : ""}
-              />
-              {errors.contact_info && <p className="text-destructive text-sm">{errors.contact_info}</p>}
-            </div>
-
-            <div className="pt-4 border-t">
-              <h3 className="text-lg font-medium mb-4">Предпочтения (необязательно)</h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="preferred_brand">Предпочитаемая марка</Label>
-                  <Input
-                    id="preferred_brand"
-                    name="preferred_brand"
-                    value={formData.preferred_brand}
-                    onChange={handleChange}
-                    placeholder="Например, Toyota"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="preferred_model">Предпочитаемая модель</Label>
-                  <Input
-                    id="preferred_model"
-                    name="preferred_model"
-                    value={formData.preferred_model}
-                    onChange={handleChange}
-                    placeholder="Например, Camry"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="min_year">Мин. год выпуска</Label>
-                  <Input
-                    id="min_year"
-                    name="min_year"
-                    type="number"
-                    value={formData.min_year}
-                    onChange={handleChange}
-                    placeholder="2015"
-                    className={errors.min_year ? "border-destructive" : ""}
-                  />
-                  {errors.min_year && <p className="text-destructive text-sm">{errors.min_year}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="max_year">Макс. год выпуска</Label>
-                  <Input
-                    id="max_year"
-                    name="max_year"
-                    type="number"
-                    value={formData.max_year}
-                    onChange={handleChange}
-                    placeholder="2023"
-                    className={errors.max_year ? "border-destructive" : ""}
-                  />
-                  {errors.max_year && <p className="text-destructive text-sm">{errors.max_year}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="min_power">Мин. мощность (л.с.)</Label>
-                  <Input
-                    id="min_power"
-                    name="min_power"
-                    type="number"
-                    value={formData.min_power}
-                    onChange={handleChange}
-                    placeholder="100"
-                    className={errors.min_power ? "border-destructive" : ""}
-                  />
-                  {errors.min_power && <p className="text-destructive text-sm">{errors.min_power}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="max_power">Макс. мощность (л.с.)</Label>
-                  <Input
-                    id="max_power"
-                    name="max_power"
-                    type="number"
-                    value={formData.max_power}
-                    onChange={handleChange}
-                    placeholder="300"
-                    className={errors.max_power ? "border-destructive" : ""}
-                  />
-                  {errors.max_power && <p className="text-destructive text-sm">{errors.max_power}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="preferred_transmission">Тип КПП</Label>
-                  <Select
-                    value={formData.preferred_transmission}
-                    onValueChange={(value) => handleSelectChange("preferred_transmission", value)}
-                  >
-                    <SelectTrigger id="preferred_transmission">
-                      <SelectValue placeholder="Выберите КПП" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="АКП">Автомат</SelectItem>
-                      <SelectItem value="МКП">Механика</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="preferred_condition">Состояние</Label>
-                  <Select
-                    value={formData.preferred_condition}
-                    onValueChange={(value) => handleSelectChange("preferred_condition", value)}
-                  >
-                    <SelectTrigger id="preferred_condition">
-                      <SelectValue placeholder="Выберите состояние" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">Новый</SelectItem>
-                      <SelectItem value="used">С пробегом</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="max_price">Максимальная цена</Label>
-                  <Input
-                    id="max_price"
-                    name="max_price"
-                    type="number"
-                    value={formData.max_price}
-                    onChange={handleChange}
-                    placeholder="2000000"
-                    className={errors.max_price ? "border-destructive" : ""}
-                  />
-                  {errors.max_price && <p className="text-destructive text-sm">{errors.max_price}</p>}
-                </div>
+            {/* Основные данные в две колонки */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email*</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="example@mail.com"
+                  className={errors.email ? "border-destructive" : ""}
+                />
+                {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="full_name">ФИО*</Label>
+                <Input
+                  id="full_name"
+                  name="full_name"
+                  value={formData.full_name}
+                  onChange={handleChange}
+                  placeholder="Иванов Иван Иванович"
+                  className={errors.full_name ? "border-destructive" : ""}
+                />
+                {errors.full_name && <p className="text-destructive text-sm">{errors.full_name}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Пароль*</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={errors.password ? "border-destructive" : ""}
+                />
+                {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Подтверждение пароля*</Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className={errors.confirmPassword ? "border-destructive" : ""}
+                />
+                {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="contact_info">Телефон*</Label>
+                <Input
+                  id="contact_info"
+                  name="contact_info"
+                  value={formData.contact_info}
+                  onChange={handleChange}
+                  placeholder="+7 (999) 123-45-67"
+                  className={errors.contact_info ? "border-destructive" : ""}
+                />
+                {errors.contact_info && <p className="text-destructive text-sm">{errors.contact_info}</p>}
+              </div>
+            </div>
+
+            {/* Секция предпочтений (разворачиваемая) */}
+            <div className="pt-4 border-t">
+              <button
+                type="button"
+                onClick={togglePreferences}
+                className="flex items-center justify-between w-full text-left py-2"
+              >
+                <h3 className="text-lg font-medium">Предпочтения (необязательно)</h3>
+                {showPreferences ?
+                  <ChevronUp className="h-5 w-5" /> :
+                  <ChevronDown className="h-5 w-5" />
+                }
+              </button>
+
+              {showPreferences && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="preferred_brand">Предпочитаемая марка</Label>
+                    <Input
+                      id="preferred_brand"
+                      name="preferred_brand"
+                      value={formData.preferred_brand}
+                      onChange={handleChange}
+                      placeholder="Например, Toyota"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="preferred_model">Предпочитаемая модель</Label>
+                    <Input
+                      id="preferred_model"
+                      name="preferred_model"
+                      value={formData.preferred_model}
+                      onChange={handleChange}
+                      placeholder="Например, Camry"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="min_year">Мин. год выпуска</Label>
+                    <Input
+                      id="min_year"
+                      name="min_year"
+                      type="number"
+                      value={formData.min_year}
+                      onChange={handleChange}
+                      placeholder="2015"
+                      className={errors.min_year ? "border-destructive" : ""}
+                    />
+                    {errors.min_year && <p className="text-destructive text-sm">{errors.min_year}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="max_year">Макс. год выпуска</Label>
+                    <Input
+                      id="max_year"
+                      name="max_year"
+                      type="number"
+                      value={formData.max_year}
+                      onChange={handleChange}
+                      placeholder="2023"
+                      className={errors.max_year ? "border-destructive" : ""}
+                    />
+                    {errors.max_year && <p className="text-destructive text-sm">{errors.max_year}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="min_power">Мин. мощность (л.с.)</Label>
+                    <Input
+                      id="min_power"
+                      name="min_power"
+                      type="number"
+                      value={formData.min_power}
+                      onChange={handleChange}
+                      placeholder="100"
+                      className={errors.min_power ? "border-destructive" : ""}
+                    />
+                    {errors.min_power && <p className="text-destructive text-sm">{errors.min_power}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="max_power">Макс. мощность (л.с.)</Label>
+                    <Input
+                      id="max_power"
+                      name="max_power"
+                      type="number"
+                      value={formData.max_power}
+                      onChange={handleChange}
+                      placeholder="300"
+                      className={errors.max_power ? "border-destructive" : ""}
+                    />
+                    {errors.max_power && <p className="text-destructive text-sm">{errors.max_power}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="preferred_transmission">Тип КПП</Label>
+                    <Select
+                      value={formData.preferred_transmission}
+                      onValueChange={(value) => handleSelectChange("preferred_transmission", value)}
+                    >
+                      <SelectTrigger id="preferred_transmission">
+                        <SelectValue placeholder="Выберите КПП" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="АКП">Автомат</SelectItem>
+                        <SelectItem value="МКП">Механика</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="preferred_condition">Состояние</Label>
+                    <Select
+                      value={formData.preferred_condition}
+                      onValueChange={(value) => handleSelectChange("preferred_condition", value)}
+                    >
+                      <SelectTrigger id="preferred_condition">
+                        <SelectValue placeholder="Выберите состояние" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">Новый</SelectItem>
+                        <SelectItem value="used">С пробегом</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="max_price">Максимальная цена</Label>
+                    <Input
+                      id="max_price"
+                      name="max_price"
+                      type="number"
+                      value={formData.max_price}
+                      onChange={handleChange}
+                      placeholder="2000000"
+                      className={errors.max_price ? "border-destructive" : ""}
+                    />
+                    {errors.max_price && <p className="text-destructive text-sm">{errors.max_price}</p>}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
 
-          <CardFooter className="flex-col gap-4">
+          <CardFooter className="flex-col gap-4 pt-6">
             <Button
               type="submit"
               className="w-full"

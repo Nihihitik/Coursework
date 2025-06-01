@@ -72,18 +72,18 @@ export default function Login() {
   };
 
   return (
-    <div className="container max-w-md mx-auto p-6">
-      <Card>
-        <CardHeader>
+    <div className="container max-w-md mx-auto py-12 px-4">
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-4 space-y-1">
           <CardTitle className="text-2xl text-center">Вход в систему</CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-sm">
             Войдите в свой аккаунт, чтобы получить доступ к системе
           </CardDescription>
         </CardHeader>
 
         {successMessage && (
-          <div className="px-6">
-            <Alert className="mb-6 bg-green-50 border-green-200">
+          <div className="px-6 pb-2">
+            <Alert className="bg-green-50 border-green-200">
               <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
               <AlertDescription className="text-green-600">
                 {successMessage}
@@ -95,7 +95,7 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-destructive/10 text-destructive p-3 rounded-md text-center">
+              <div className="bg-destructive/10 text-destructive p-3 rounded-md text-center text-sm">
                 {error}
               </div>
             )}
@@ -122,9 +122,7 @@ export default function Login() {
                 required
               />
             </div>
-          </CardContent>
 
-          <CardFooter className="flex-col gap-4">
             <Button
               type="submit"
               className="w-full"
@@ -132,17 +130,23 @@ export default function Login() {
             >
               {isSubmitting ? "Вход..." : "Войти"}
             </Button>
+          </CardContent>
 
-            <div className="text-center space-y-2">
-              <p className="text-sm">
+          <CardFooter className="flex-col pt-0 pb-5">
+            <div className="text-center w-full">
+              <p className="text-sm mb-2 mt-6">
                 Еще нет аккаунта?
               </p>
-              <div className="flex gap-2 justify-center">
-                <Link href="/auth/register/buyer">
-                  <Button variant="outline" size="sm">Регистрация покупателя</Button>
+              <div className="grid grid-cols-2 w-full gap-2">
+                <Link href="/auth/register/buyer" className="text-center">
+                  <span className="text-primary text-sm hover:underline">
+                    Регистрация покупателя
+                  </span>
                 </Link>
-                <Link href="/auth/register/seller">
-                  <Button variant="outline" size="sm">Регистрация продавца</Button>
+                <Link href="/auth/register/seller" className="text-center">
+                  <span className="text-primary text-sm hover:underline">
+                    Регистрация продавца
+                  </span>
                 </Link>
               </div>
             </div>
