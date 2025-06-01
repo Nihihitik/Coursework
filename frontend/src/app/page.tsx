@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -61,8 +62,8 @@ export default function Home() {
         if (filters.max_year) params.append("max_year", filters.max_year.toString());
         if (filters.min_price) params.append("min_price", filters.min_price.toString());
         if (filters.max_price) params.append("max_price", filters.max_price.toString());
-        if (filters.condition) params.append("condition", filters.condition);
-        if (filters.transmission) params.append("transmission", filters.transmission);
+        if (filters.condition && filters.condition !== "all") params.append("condition", filters.condition);
+        if (filters.transmission && filters.transmission !== "all") params.append("transmission", filters.transmission);
         if (filters.max_mileage) params.append("max_mileage", filters.max_mileage.toString());
 
         // Используем относительный путь для API запросов
@@ -115,8 +116,12 @@ export default function Home() {
             Наши специалисты помогут подобрать идеальный автомобиль, соответствующий всем вашим требованиям.
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <Button size="lg">Начать поиск автомобиля</Button>
-            <Button variant="outline" size="lg">Связаться с нами</Button>
+            <Link href="/auth/register/buyer">
+              <Button size="lg">Купить автомобиль</Button>
+            </Link>
+            <Link href="/auth/register/seller">
+              <Button variant="outline" size="lg">Продать автомобиль</Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -218,14 +223,14 @@ export default function Home() {
                   <div className="space-y-2">
                     <Label htmlFor="condition">Состояние</Label>
                     <Select
-                      value={filters.condition || ""}
+                      value={filters.condition || "all"}
                       onValueChange={(value: string) => updateFilter("condition", value)}
                     >
                       <SelectTrigger id="condition">
                         <SelectValue placeholder="Выберите состояние" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Все</SelectItem>
+                        <SelectItem value="all">Все</SelectItem>
                         <SelectItem value="new">Новый</SelectItem>
                         <SelectItem value="used">С пробегом</SelectItem>
                       </SelectContent>
@@ -236,14 +241,14 @@ export default function Home() {
                   <div className="space-y-2">
                     <Label htmlFor="transmission">Коробка передач</Label>
                     <Select
-                      value={filters.transmission || ""}
+                      value={filters.transmission || "all"}
                       onValueChange={(value: string) => updateFilter("transmission", value)}
                     >
                       <SelectTrigger id="transmission">
                         <SelectValue placeholder="Выберите КПП" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Все</SelectItem>
+                        <SelectItem value="all">Все</SelectItem>
                         <SelectItem value="АКП">Автомат</SelectItem>
                         <SelectItem value="МКП">Механика</SelectItem>
                       </SelectContent>
