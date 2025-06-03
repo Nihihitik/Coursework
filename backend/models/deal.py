@@ -1,12 +1,11 @@
 from pydantic import BaseModel, Field
-from uuid import UUID
 from datetime import datetime
 from .base import DealStatus
 
 class DealBase(BaseModel):
     """Базовая модель сделки"""
-    car_id: UUID
-    buyer_id: UUID
+    car_id: int
+    buyer_id: int
     price: float
     status: DealStatus = DealStatus.PENDING
 
@@ -16,7 +15,7 @@ class DealCreate(DealBase):
 
 class DealInDB(DealBase):
     """Модель сделки в базе данных"""
-    id: UUID
+    id: int
     deal_date: datetime = Field(default_factory=datetime.now)
 
     class Config:
@@ -24,7 +23,7 @@ class DealInDB(DealBase):
 
 class Deal(DealBase):
     """Модель сделки для ответа API"""
-    id: UUID
+    id: int
     deal_date: datetime
 
     class Config:
