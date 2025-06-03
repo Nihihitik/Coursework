@@ -1,11 +1,10 @@
 from pydantic import BaseModel, Field
-from uuid import UUID
 from datetime import datetime
 
 class FavoriteBase(BaseModel):
     """Базовая модель избранного"""
-    buyer_id: UUID
-    car_id: UUID
+    buyer_id: int
+    car_id: int
 
 class FavoriteCreate(FavoriteBase):
     """Модель для создания избранного"""
@@ -13,7 +12,7 @@ class FavoriteCreate(FavoriteBase):
 
 class FavoriteInDB(FavoriteBase):
     """Модель избранного в базе данных"""
-    id: UUID
+    id: int
     added_at: datetime = Field(default_factory=datetime.now)
 
     class Config:
@@ -21,7 +20,7 @@ class FavoriteInDB(FavoriteBase):
 
 class Favorite(FavoriteBase):
     """Модель избранного для ответа API"""
-    id: UUID
+    id: int
     added_at: datetime
 
     class Config:

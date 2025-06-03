@@ -1,7 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
 from .base import UserRole
 
 class UserBase(BaseModel):
@@ -15,7 +13,7 @@ class UserCreate(UserBase):
 
 class UserInDB(UserBase):
     """Модель пользователя в базе данных"""
-    id: UUID
+    id: int
     password_hash: str
     created_at: datetime = Field(default_factory=datetime.now)
 
@@ -24,7 +22,7 @@ class UserInDB(UserBase):
 
 class User(UserBase):
     """Модель пользователя для ответа API"""
-    id: UUID
+    id: int
     created_at: datetime
 
     class Config:

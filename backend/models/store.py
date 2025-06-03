@@ -1,6 +1,4 @@
 from pydantic import BaseModel
-from uuid import UUID
-
 class StoreBase(BaseModel):
     """Базовая модель магазина"""
     name: str
@@ -12,14 +10,14 @@ class StoreCreate(StoreBase):
 
 class StoreInDB(StoreBase):
     """Модель магазина в базе данных"""
-    id: UUID
+    id: int
 
     class Config:
         from_attributes = True
 
 class Store(StoreBase):
     """Модель магазина для ответа API"""
-    id: UUID
+    id: int
 
     class Config:
         from_attributes = True
