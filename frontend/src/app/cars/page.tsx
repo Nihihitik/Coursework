@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getAllCars, addCarToFavorites, removeFromFavorites } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Badge } from "@/components/ui/badge";
 
 // Интерфейс для автомобиля
 interface Car {
@@ -18,6 +19,7 @@ interface Car {
   color: string;
   image_url: string;
   is_favorite?: boolean;
+  status?: 'active' | 'inactive' | 'sold';
 }
 
 // Интерфейс для фильтров
@@ -138,6 +140,20 @@ export default function CarsPage() {
       }
     } catch (error) {
       console.error('Ошибка при обновлении избранного:', error);
+    }
+  };
+
+  // Функция для получения бейджа статуса
+  const getStatusBadge = (status?: string) => {
+    switch(status) {
+      case 'active':
+        return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">В продаже</Badge>;
+      case 'inactive':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-400">Неактивен</Badge>;
+      case 'sold':
+        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Продан</Badge>;
+      default:
+        return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">В продаже</Badge>;
     }
   };
 
@@ -347,9 +363,12 @@ export default function CarsPage() {
                           {car.make} {car.model}
                         </h3>
                       </Link>
-                      <p className="text-xl font-bold text-gray-900 mt-2">
-                        {car.price ? car.price.toLocaleString() : 'Цена не указана'} ₽
-                      </p>
+                      <div className="flex justify-between items-center mt-2">
+                        <p className="text-xl font-bold text-gray-900">
+                          {car.price ? car.price.toLocaleString() : 'Цена не указана'} ₽
+                        </p>
+                        {getStatusBadge(car.status)}
+                      </div>
                       <div className="grid grid-cols-2 gap-2 mt-3">
                         <div>
                           <p className="text-sm text-gray-500">Год выпуска</p>

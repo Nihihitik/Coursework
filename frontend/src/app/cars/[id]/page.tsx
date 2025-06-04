@@ -5,6 +5,7 @@ import { getCarById, addCarToFavorites, removeFromFavorites } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 // Интерфейс для автомобиля
 interface Car {
@@ -32,6 +33,7 @@ interface Car {
   seller_phone?: string;
   created_at: string;
   isProcessing?: boolean; // Флаг для отслеживания состояния обработки запроса
+  status?: 'active' | 'inactive' | 'sold';
 }
 
 export default function CarDetailsPage({ params }: { params: { id: string } }) {
@@ -109,6 +111,20 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
     }
   };
 
+  // Функция для получения бейджа статуса
+  const getStatusBadge = (status?: string) => {
+    switch(status) {
+      case 'active':
+        return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">В продаже</Badge>;
+      case 'inactive':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-400">Неактивен</Badge>;
+      case 'sold':
+        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Продан</Badge>;
+      default:
+        return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">В продаже</Badge>;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -182,7 +198,10 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
               <div className="flex justify-between items-start">
                 <div>
                   <h2 className="text-2xl font-semibold text-gray-900">{car.make} {car.model}, {car.year}</h2>
-                  <p className="text-3xl font-bold text-gray-900 mt-2 mb-4">{car.price.toLocaleString()} ₽</p>
+                  <div className="flex items-center gap-3 mt-2 mb-4">
+                    <p className="text-3xl font-bold text-gray-900">{car.price.toLocaleString()} ₽</p>
+                    {getStatusBadge(car.status)}
+                  </div>
                 </div>
                 <button
                   onClick={toggleFavorite}
