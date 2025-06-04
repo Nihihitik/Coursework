@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getAllCars } from "@/lib/api";
+import { getAllCars, getCarById } from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import CarDetailsModal from "@/components/CarDetailsModal";
+import { Car as CarIcon, ShieldCheck, Phone } from "lucide-react";
 
 // Типы данных для автомобилей
 interface Car {
@@ -47,6 +49,9 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<Filters>({});
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // Загрузка списка автомобилей
   useEffect(() => {
@@ -102,6 +107,19 @@ export default function Home() {
     setSearchTerm("");
   };
 
+  const openCarDetails = async (carId: number) => {
+    try {
+      setModalLoading(true);
+      setIsModalOpen(true);
+      const carDetails = await getCarById(carId);
+      setSelectedCar(carDetails);
+    } catch (error) {
+      console.error("Ошибка при загрузке данных автомобиля:", error);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background">
       {/* Hero секция с информацией о компании */}
@@ -121,6 +139,27 @@ export default function Home() {
             <Link href="/auth/register/seller">
               <Button variant="outline" size="lg">Продать автомобиль</Button>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Наши преимущества */}
+      <section className="py-12 px-6 bg-secondary/50">
+        <div className="container max-w-6xl mx-auto grid md:grid-cols-3 gap-8 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <CarIcon className="h-8 w-8 text-primary" />
+            <h3 className="text-xl font-semibold">Большой выбор</h3>
+            <p className="text-muted-foreground">Сотни моделей от проверенных продавцов</p>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <ShieldCheck className="h-8 w-8 text-primary" />
+            <h3 className="text-xl font-semibold">Прозрачные цены</h3>
+            <p className="text-muted-foreground">Все автомобили проходят тщательную проверку</p>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Phone className="h-8 w-8 text-primary" />
+            <h3 className="text-xl font-semibold">Поддержка 24/7</h3>
+            <p className="text-muted-foreground">Мы всегда готовы помочь вам с выбором</p>
           </div>
         </div>
       </section>
@@ -329,7 +368,7 @@ export default function Home() {
                         </div>
                       )}
                     </div>
-                    <Button className="w-full mt-4">Подробнее</Button>
+                    <Button className="w-full mt-4" onClick={() => openCarDetails(car.id)}>Подробнее</Button>
                   </div>
                 </Card>
               ))}
@@ -342,6 +381,12 @@ export default function Home() {
           )}
         </div>
       </section>
+      <CarDetailsModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        car={selectedCar}
+        loading={modalLoading}
+      />
     </main>
   );
 }
