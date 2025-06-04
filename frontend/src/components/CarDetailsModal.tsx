@@ -34,9 +34,14 @@ export default function CarDetailsModal({ open, onOpenChange, car, loading }: Ca
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         {loading ? (
-          <div className="h-48 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900" />
-          </div>
+          <>
+            <DialogHeader>
+              <DialogTitle className="sr-only">Загрузка</DialogTitle>
+            </DialogHeader>
+            <div className="h-48 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900" />
+            </div>
+          </>
         ) : car ? (
           <>
             <DialogHeader>
@@ -124,7 +129,12 @@ export default function CarDetailsModal({ open, onOpenChange, car, loading }: Ca
             </DialogFooter>
           </>
         ) : (
-          <div className="p-4 text-center text-gray-500">Не удалось загрузить информацию об автомобиле</div>
+          <>
+            <DialogHeader>
+              <DialogTitle className="sr-only">Ошибка</DialogTitle>
+            </DialogHeader>
+            <div className="p-4 text-center text-gray-500">Не удалось загрузить информацию об автомобиле</div>
+          </>
         )}
       </DialogContent>
     </Dialog>
