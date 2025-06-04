@@ -5,6 +5,23 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getUserProfile, updateUserProfile, deleteUserAccount } from '@/lib/api';
 
+// Импортируем компоненты из shadcn/ui
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 interface Seller {
   id: string;
   email: string;
@@ -62,7 +79,6 @@ export default function ProfilePage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Вы уверены, что хотите удалить аккаунт?')) return;
     try {
       await deleteUserAccount();
       localStorage.removeItem('auth_token');
@@ -82,58 +98,110 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-50">
+      <header className="border-b bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Профиль продавца</h1>
-          <div className="flex gap-4">
-            <Link href="/dashboard/seller" className="text-sm text-gray-600 hover:text-gray-900 transition">
-              Вернуться в кабинет
-            </Link>
-          </div>
+          <Link href="/dashboard/seller" passHref>
+            <Button variant="outline">Вернуться в кабинет</Button>
+          </Link>
         </div>
       </header>
-      <main className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Личная информация</h2>
-            <button
+
+      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-2xl font-bold">Личная информация</CardTitle>
+            <Button
+              variant={isEditing ? "outline" : "default"}
               onClick={() => setIsEditing(!isEditing)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
             >
               {isEditing ? 'Отменить' : 'Редактировать'}
-            </button>
-          </div>
-          {isEditing ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input type="text" id="email" value={user?.email || ''} disabled className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-100" />
+            </Button>
+          </CardHeader>
+
+          <CardContent>
+            {isEditing ? (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      value={user?.email || ''}
+                      disabled
+                      className="bg-gray-100"
+                    />
+                    <p className="text-sm text-gray-500">Email нельзя изменить</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Полное имя</Label>
+                    <Input
+                      id="full_name"
+                      name="full_name"
+                      value={formData.full_name || ''}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_info">Контактная информация</Label>
+                    <Input
+                      id="contact_info"
+                      name="contact_info"
+                      value={formData.contact_info || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1">Полное имя</label>
-                  <input type="text" id="full_name" name="full_name" value={formData.full_name || ''} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md" required />
+
+                <div className="flex justify-end">
+                  <Button type="submit" className="w-full sm:w-auto">
+                    Сохранить изменения
+                  </Button>
                 </div>
-                <div>
-                  <label htmlFor="contact_info" className="block text-sm font-medium text-gray-700 mb-1">Контактная информация</label>
-                  <input type="text" id="contact_info" name="contact_info" value={formData.contact_info || ''} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md" />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <button type="submit" className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg">Сохранить</button>
-              </div>
-            </form>
-          ) : (
-            <div className="space-y-3">
-              <p><strong>Email:</strong> {user?.email}</p>
-              <p><strong>Полное имя:</strong> {user?.full_name}</p>
-              <p><strong>Контактная информация:</strong> {user?.contact_info}</p>
-            </div>
-          )}
-        </div>
-        <div className="flex justify-between mt-8">
-          <button onClick={handleDelete} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">Удалить аккаунт</button>
+              </form>
+            ) : (
+              <Card className="border shadow-none">
+                <CardContent className="space-y-4 pt-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="text-base font-medium">{user?.email || 'Не указано'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Полное имя</p>
+                    <p className="text-base font-medium">{user?.full_name || 'Не указано'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Контактная информация</p>
+                    <p className="text-base font-medium">{user?.contact_info || 'Не указано'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end mt-8">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Удалить аккаунт</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Это действие нельзя отменить. Ваш аккаунт будет удален вместе со всеми данными и объявлениями.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Удалить</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </main>
     </div>
