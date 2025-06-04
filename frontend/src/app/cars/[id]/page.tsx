@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { getCarById, addCarToFavorites, removeFromFavorites } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -36,7 +36,8 @@ interface Car {
   status?: 'active' | 'inactive' | 'sold';
 }
 
-export default function CarDetailsPage({ params }: { params: { id: string } }) {
+export default function CarDetailsPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+  const { id } = use(params);
   const [car, setCar] = useState<Car | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -47,7 +48,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
     const fetchCar = async () => {
       try {
         setLoading(true);
-        const carData = await getCarById(parseInt(params.id));
+        const carData = await getCarById(parseInt(id));
         setCar(carData);
       } catch (error) {
         console.error('Ошибка при загрузке данных автомобиля:', error);
@@ -64,7 +65,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
     setUserRole(role);
 
     fetchCar();
-  }, [params.id, router]);
+  }, [id, router]);
 
   const toggleFavorite = async () => {
     if (!car) return;

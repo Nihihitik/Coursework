@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -80,11 +80,11 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface EditCarPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }> | { id: string }
 }
 
 export default function EditCarPage({ params }: EditCarPageProps) {
-  const carId = parseInt(params.id);
+  const carId = parseInt(use(params).id);
 
   const router = useRouter();
   const [error, setError] = useState('');
@@ -257,7 +257,7 @@ export default function EditCarPage({ params }: EditCarPageProps) {
   }
 
   return (
-    <div className="container max-w-4xl py-10">
+    <div className="container mx-auto max-w-4xl py-10">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Редактирование автомобиля</h1>
         <p className="text-muted-foreground mt-2">Внесите изменения в информацию об автомобиле</p>
