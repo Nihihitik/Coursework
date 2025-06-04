@@ -90,7 +90,7 @@ export const getCarById = async (id) => {
 export const addCarToFavorites = async (carId) => {
   try {
     console.log('Добавляем автомобиль в избранное:', carId);
-    const response = await api.post('/favorites', { car_id: carId });
+    const response = await api.post(`/favorites/${carId}`);
     console.log('Ответ сервера после добавления в избранное:', response.data);
     return response.data;
   } catch (error) {

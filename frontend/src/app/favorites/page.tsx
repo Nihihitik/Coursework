@@ -8,16 +8,16 @@ import { useRouter } from 'next/navigation';
 // Интерфейс для автомобиля
 interface Car {
   id: number;
-  make: string;
-  model: string;
-  year: number;
-  price: number;
-  mileage: number;
-  fuel_type: string;
-  transmission: string;
-  color: string;
-  image_url: string;
-  is_favorite: boolean;
+  make?: string;
+  model?: string;
+  year?: number;
+  price?: number;
+  mileage?: number;
+  fuel_type?: string;
+  transmission?: string;
+  color?: string;
+  image_url?: string;
+  is_favorite?: boolean;
 }
 
 export default function FavoritesPage() {
@@ -152,7 +152,7 @@ export default function FavoritesPage() {
                     </div>
 
                     <p className="text-xl font-bold text-gray-900 mt-2">
-                      {car.price.toLocaleString()} ₽
+                      {car.price ? car.price.toLocaleString() : 'Цена не указана'} ₽
                     </p>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-3">
@@ -162,7 +162,7 @@ export default function FavoritesPage() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Пробег</p>
-                        <p className="text-sm font-medium">{car.mileage.toLocaleString()} км</p>
+                        <p className="text-sm font-medium">{car.mileage ? car.mileage.toLocaleString() : 'Не указан'} км</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">КПП</p>
