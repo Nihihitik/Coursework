@@ -151,6 +151,17 @@ export default function SellerCars() {
     }
   };
 
+  const getConditionLabel = (condition?: string) => {
+    switch (condition) {
+      case 'new':
+        return 'Новый';
+      case 'used':
+        return 'С пробегом';
+      default:
+        return condition || 'Не указано';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -213,7 +224,7 @@ export default function SellerCars() {
                       <div className="text-sm text-muted-foreground">{car.year} г.</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm">{car.transmission}, {car.condition}</div>
+                      <div className="text-sm">{car.transmission}, {getConditionLabel(car.condition)}</div>
                       <div className="text-sm text-muted-foreground">Пробег: {car.mileage} км</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -316,7 +327,7 @@ export default function SellerCars() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Состояние</p>
-                    <p>{selectedCar.condition}</p>
+                    <p>{getConditionLabel(selectedCar.condition)}</p>
                   </div>
                 </div>
               </div>

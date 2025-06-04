@@ -149,6 +149,17 @@ export default function SellerDashboard() {
     }
   };
 
+  const getConditionLabel = (condition?: string) => {
+    switch (condition) {
+      case 'new':
+        return 'Новый';
+      case 'used':
+        return 'С пробегом';
+      default:
+        return condition || 'Не указано';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -419,7 +430,7 @@ export default function SellerDashboard() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Состояние</p>
-                    <p>{selectedCar.condition}</p>
+                    <p>{getConditionLabel(selectedCar.condition)}</p>
                   </div>
                 </div>
               </div>
