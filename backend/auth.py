@@ -18,6 +18,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 
 def verify_password(plain_password, hashed_password):
     """Проверка пароля по хешу"""
@@ -70,6 +71,30 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 
     # Добавление роли к объекту пользователя
     user.role = role
+    return user
+
+async def get_current_user_optional(token: str = Depends(oauth2_scheme_optional), db: Session = Depends(get_db)):
+    """Получение текущего пользователя, если токен предоставлен"""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        role: str = payload.get("role")
+        if email is None:
+            return None
+    except JWTError:
+        return None
+
+    if role == "buyer":
+        user = db.query(Buyer).filter(Buyer.email == email).first()
+    elif role in ["seller", "admin"]:
+        user = db.query(Seller).filter(Seller.email == email).first()
+    else:
+        return None
+
+    if user:
+        user.role = role
     return user
 
 async def get_current_buyer(current_user = Depends(get_current_user)):
