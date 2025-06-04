@@ -42,15 +42,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+
+// Определяем интерфейс для магазина
+interface Store {
+  id: number;
+  name: string;
+  address: string;
+}
 
 // Схема для создания магазина
 const storeFormSchema = z.object({
   name: z.string().min(1, { message: "Введите название магазина" }),
   address: z.string().min(1, { message: "Введите адрес магазина" }),
 });
+
+type StoreFormValues = z.infer<typeof storeFormSchema>;
 
 // Определяем схему валидации для автомобиля
 const formSchema = z.object({
@@ -69,24 +77,27 @@ const formSchema = z.object({
   store_id: z.number()
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 interface EditCarPageProps {
   params: { id: string };
 }
 
 export default function EditCarPage({ params }: EditCarPageProps) {
   const carId = parseInt(params.id);
+
   const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
-  const [stores, setStores] = useState([]);
+  const [stores, setStores] = useState<Store[]>([]);
   const [storesLoading, setStoresLoading] = useState(true);
   const [storeDialogOpen, setStoreDialogOpen] = useState(false);
   const [storeError, setStoreError] = useState('');
   const [createStoreLoading, setCreateStoreLoading] = useState(false);
 
   // Инициализация формы с использованием react-hook-form и zod
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       brand: '',
@@ -98,12 +109,12 @@ export default function EditCarPage({ params }: EditCarPageProps) {
       condition: 'new',
       mileage: 0,
       features: [],
-      store_id: undefined
+      store_id: undefined as any
     },
   });
 
   // Инициализация формы для создания магазина
-  const storeForm = useForm<z.infer<typeof storeFormSchema>>({
+  const storeForm = useForm<StoreFormValues>({
     resolver: zodResolver(storeFormSchema),
     defaultValues: {
       name: '',
@@ -166,7 +177,7 @@ export default function EditCarPage({ params }: EditCarPageProps) {
   }, [carId, router, form]);
 
   // Функция для создания нового магазина
-  async function handleCreateStore(values: z.infer<typeof storeFormSchema>) {
+  async function handleCreateStore(values: StoreFormValues) {
     setCreateStoreLoading(true);
     setStoreError('');
 
@@ -174,7 +185,12 @@ export default function EditCarPage({ params }: EditCarPageProps) {
       const response = await createStore(values);
 
       // Добавляем новый магазин в список и выбираем его
-      const newStore = { id: response.id, name: values.name, address: values.address };
+      const newStore: Store = {
+        id: response.id,
+        name: values.name,
+        address: values.address
+      };
+
       setStores([...stores, newStore]);
       form.setValue('store_id', response.id);
 
@@ -202,7 +218,7 @@ export default function EditCarPage({ params }: EditCarPageProps) {
     }
   }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: FormValues) {
     setLoading(true);
     setError('');
 
@@ -424,16 +440,20 @@ export default function EditCarPage({ params }: EditCarPageProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {stores.map((store: any) => (
+                            {stores.map((store) => (
                               <SelectItem key={store.id} value={store.id.toString()}>
                                 {store.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <DialogTrigger asChild onClick={() => setStoreDialogOpen(true)}>
-                          <Button variant="outline" type="button">+</Button>
-                        </DialogTrigger>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={() => setStoreDialogOpen(true)}
+                        >
+                          +
+                        </Button>
                       </div>
                       <FormMessage />
                     </FormItem>
