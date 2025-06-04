@@ -364,14 +364,6 @@ export default function SellerCars() {
             </Button>
             <div className="flex space-x-2">
               <Button
-                variant="outline"
-                asChild
-              >
-                <Link href={`/cars/${selectedCar?.id}`} target="_blank">
-                  Открыть страницу
-                </Link>
-              </Button>
-              <Button
                 asChild
               >
                 <Link href={`/dashboard/seller/cars/${selectedCar?.id}/edit`}>

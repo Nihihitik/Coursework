@@ -5,6 +5,33 @@ import { getUserProfile, updateUserProfile, deleteUserAccount } from '@/lib/api'
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// Импортируем компоненты из shadcn/ui
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
 // Типы для предпочтений и пользователя
 interface UserPreferences {
   preferred_brand: string | null;
@@ -116,6 +143,25 @@ export default function BuyerProfile() {
     }
   };
 
+  // Обработчик для изменения значения в компонентах Select
+  const handleSelectChange = (field: string, value: string) => {
+    if (field.startsWith('preferences.')) {
+      const preferenceField = field.split('.')[1];
+      setFormData({
+        ...formData,
+        preferences: {
+          ...formData.preferences,
+          [preferenceField]: value === 'none' ? null : value,
+        }
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [field]: value === 'none' ? null : value,
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -130,7 +176,6 @@ export default function BuyerProfile() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Вы уверены, что хотите удалить аккаунт?')) return;
     try {
       await deleteUserAccount();
       localStorage.removeItem('auth_token');
@@ -151,262 +196,227 @@ export default function BuyerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Шапка */}
-      <header className="bg-white shadow">
+      <header className="border-b bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Профиль пользователя</h1>
-          <div className="flex gap-4">
-            <Link href="/dashboard/buyer" className="text-sm text-gray-600 hover:text-gray-900 transition">
-              Вернуться в личный кабинет
-            </Link>
-          </div>
+          <Link href="/dashboard/buyer" passHref>
+            <Button variant="outline">Вернуться в личный кабинет</Button>
+          </Link>
         </div>
       </header>
 
       {/* Основной контент */}
-      <main className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Личная информация</h2>
-            <button
+      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-2xl font-bold">Личная информация</CardTitle>
+            <Button
+              variant={isEditing ? "outline" : "default"}
               onClick={() => setIsEditing(!isEditing)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200"
             >
               {isEditing ? 'Отменить' : 'Редактировать'}
-            </button>
-          </div>
+            </Button>
+          </CardHeader>
 
-          {isEditing ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="text"
-                    id="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-100"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Email нельзя изменить</p>
-                </div>
+          <CardContent>
+            {isEditing ? (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      value={user?.email || ''}
+                      disabled
+                      className="bg-gray-100"
+                    />
+                    <p className="text-sm text-gray-500">Email нельзя изменить</p>
+                  </div>
 
-                <div>
-                  <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Полное имя
-                  </label>
-                  <input
-                    type="text"
-                    id="full_name"
-                    name="full_name"
-                    value={formData.full_name || ''}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="contact_info" className="block text-sm font-medium text-gray-700 mb-1">
-                    Контактная информация
-                  </label>
-                  <input
-                    type="text"
-                    id="contact_info"
-                    name="contact_info"
-                    value={formData.contact_info || ''}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold mb-4">Предпочтения</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="preferred_brand" className="block text-sm font-medium text-gray-700 mb-1">
-                      Предпочитаемая марка
-                    </label>
-                    <input
-                      type="text"
-                      id="preferred_brand"
-                      name="preferences.preferred_brand"
-                      value={formData.preferences?.preferred_brand || ''}
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Полное имя</Label>
+                    <Input
+                      id="full_name"
+                      name="full_name"
+                      value={formData.full_name || ''}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
                     />
                   </div>
 
-                  <div>
-                    <label htmlFor="preferred_model" className="block text-sm font-medium text-gray-700 mb-1">
-                      Предпочитаемая модель
-                    </label>
-                    <input
-                      type="text"
-                      id="preferred_model"
-                      name="preferences.preferred_model"
-                      value={formData.preferences?.preferred_model || ''}
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_info">Контактная информация</Label>
+                    <Input
+                      id="contact_info"
+                      name="contact_info"
+                      value={formData.contact_info || ''}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="min_year" className="block text-sm font-medium text-gray-700 mb-1">
-                      Мин. год выпуска
-                    </label>
-                    <input
-                      type="number"
-                      id="min_year"
-                      name="preferences.min_year"
-                      value={formData.preferences?.min_year || ''}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="max_year" className="block text-sm font-medium text-gray-700 mb-1">
-                      Макс. год выпуска
-                    </label>
-                    <input
-                      type="number"
-                      id="max_year"
-                      name="preferences.max_year"
-                      value={formData.preferences?.max_year || ''}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="min_power" className="block text-sm font-medium text-gray-700 mb-1">
-                      Мин. мощность (л.с.)
-                    </label>
-                    <input
-                      type="number"
-                      id="min_power"
-                      name="preferences.min_power"
-                      value={formData.preferences?.min_power || ''}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="max_power" className="block text-sm font-medium text-gray-700 mb-1">
-                      Макс. мощность (л.с.)
-                    </label>
-                    <input
-                      type="number"
-                      id="max_power"
-                      name="preferences.max_power"
-                      value={formData.preferences?.max_power || ''}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="preferred_transmission" className="block text-sm font-medium text-gray-700 mb-1">
-                      Предпочитаемая КПП
-                    </label>
-                    <select
-                      id="preferred_transmission"
-                      name="preferences.preferred_transmission"
-                      value={formData.preferences?.preferred_transmission || ''}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Не важно</option>
-                      <option value="МКП">МКП</option>
-                      <option value="АКП">АКП</option>
-                      <option value="Робот">Робот</option>
-                      <option value="Вариатор">Вариатор</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="preferred_condition" className="block text-sm font-medium text-gray-700 mb-1">
-                      Предпочитаемое состояние
-                    </label>
-                    <select
-                      id="preferred_condition"
-                      name="preferences.preferred_condition"
-                      value={formData.preferences?.preferred_condition || ''}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Не важно</option>
-                      <option value="new">Новый</option>
-                      <option value="used">С пробегом</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="max_price" className="block text-sm font-medium text-gray-700 mb-1">
-                      Макс. цена ($)
-                    </label>
-                    <input
-                      type="number"
-                      id="max_price"
-                      name="preferences.max_price"
-                      value={formData.preferences?.max_price || ''}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200"
-                >
-                  Сохранить изменения
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div>
+                <div className="mt-8">
+                  <h3 className="text-lg font-medium mb-4">Предпочтения</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="preferred_brand">Предпочитаемая марка</Label>
+                      <Input
+                        id="preferred_brand"
+                        name="preferences.preferred_brand"
+                        value={formData.preferences?.preferred_brand || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="preferred_model">Предпочитаемая модель</Label>
+                      <Input
+                        id="preferred_model"
+                        name="preferences.preferred_model"
+                        value={formData.preferences?.preferred_model || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="min_year">Мин. год выпуска</Label>
+                      <Input
+                        type="number"
+                        id="min_year"
+                        name="preferences.min_year"
+                        value={formData.preferences?.min_year || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="max_year">Макс. год выпуска</Label>
+                      <Input
+                        type="number"
+                        id="max_year"
+                        name="preferences.max_year"
+                        value={formData.preferences?.max_year || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="min_power">Мин. мощность (л.с.)</Label>
+                      <Input
+                        type="number"
+                        id="min_power"
+                        name="preferences.min_power"
+                        value={formData.preferences?.min_power || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="max_power">Макс. мощность (л.с.)</Label>
+                      <Input
+                        type="number"
+                        id="max_power"
+                        name="preferences.max_power"
+                        value={formData.preferences?.max_power || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="preferred_transmission">Предпочитаемая КПП</Label>
+                      <Select
+                        value={formData.preferences?.preferred_transmission || 'none'}
+                        onValueChange={(value) => handleSelectChange('preferences.preferred_transmission', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Не важно" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Не важно</SelectItem>
+                          <SelectItem value="МКП">МКП</SelectItem>
+                          <SelectItem value="АКП">АКП</SelectItem>
+                          <SelectItem value="Робот">Робот</SelectItem>
+                          <SelectItem value="Вариатор">Вариатор</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="preferred_condition">Предпочитаемое состояние</Label>
+                      <Select
+                        value={formData.preferences?.preferred_condition || 'none'}
+                        onValueChange={(value) => handleSelectChange('preferences.preferred_condition', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Не важно" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Не важно</SelectItem>
+                          <SelectItem value="new">Новый</SelectItem>
+                          <SelectItem value="used">С пробегом</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="max_price">Макс. цена ($)</Label>
+                      <Input
+                        type="number"
+                        id="max_price"
+                        name="preferences.max_price"
+                        value={formData.preferences?.max_price || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button type="submit" className="w-full sm:w-auto">
+                    Сохранить изменения
+                  </Button>
+                </div>
+              </form>
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Основная информация</h3>
-                  <dl className="space-y-3">
+                <Card className="border shadow-none">
+                  <CardHeader className="pb-2">
+                    <h3 className="text-lg font-medium">Основная информация</h3>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pt-0">
                     <div>
-                      <dt className="text-sm text-gray-500">Email</dt>
-                      <dd className="text-base">{user?.email || 'Не указано'}</dd>
+                      <p className="text-sm text-gray-500">Email</p>
+                      <p className="text-base font-medium">{user?.email || 'Не указано'}</p>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">Полное имя</dt>
-                      <dd className="text-base">{user?.full_name || 'Не указано'}</dd>
+                      <p className="text-sm text-gray-500">Полное имя</p>
+                      <p className="text-base font-medium">{user?.full_name || 'Не указано'}</p>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">Контактная информация</dt>
-                      <dd className="text-base">{user?.contact_info || 'Не указано'}</dd>
+                      <p className="text-sm text-gray-500">Контактная информация</p>
+                      <p className="text-base font-medium">{user?.contact_info || 'Не указано'}</p>
                     </div>
-                  </dl>
-                </div>
+                  </CardContent>
+                </Card>
 
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Предпочтения</h3>
-                  <dl className="space-y-3">
+                <Card className="border shadow-none">
+                  <CardHeader className="pb-2">
+                    <h3 className="text-lg font-medium">Предпочтения</h3>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pt-0">
                     <div>
-                      <dt className="text-sm text-gray-500">Предпочитаемая марка</dt>
-                      <dd className="text-base">{user?.preferences?.preferred_brand || 'Не указано'}</dd>
+                      <p className="text-sm text-gray-500">Предпочитаемая марка</p>
+                      <p className="text-base font-medium">{user?.preferences?.preferred_brand || 'Не указано'}</p>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">Предпочитаемая модель</dt>
-                      <dd className="text-base">{user?.preferences?.preferred_model || 'Не указано'}</dd>
+                      <p className="text-sm text-gray-500">Предпочитаемая модель</p>
+                      <p className="text-base font-medium">{user?.preferences?.preferred_model || 'Не указано'}</p>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">Год выпуска</dt>
-                      <dd className="text-base">
+                      <p className="text-sm text-gray-500">Год выпуска</p>
+                      <p className="text-base font-medium">
                         {user?.preferences?.min_year && user?.preferences?.max_year
                           ? `${user.preferences.min_year} - ${user.preferences.max_year}`
                           : user?.preferences?.min_year
@@ -414,11 +424,11 @@ export default function BuyerProfile() {
                           : user?.preferences?.max_year
                           ? `До ${user.preferences.max_year}`
                           : 'Не указано'}
-                      </dd>
+                      </p>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">Мощность (л.с.)</dt>
-                      <dd className="text-base">
+                      <p className="text-sm text-gray-500">Мощность (л.с.)</p>
+                      <p className="text-base font-medium">
                         {user?.preferences?.min_power && user?.preferences?.max_power
                           ? `${user.preferences.min_power} - ${user.preferences.max_power}`
                           : user?.preferences?.min_power
@@ -426,40 +436,51 @@ export default function BuyerProfile() {
                           : user?.preferences?.max_power
                           ? `До ${user.preferences.max_power}`
                           : 'Не указано'}
-                      </dd>
+                      </p>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">Предпочитаемая КПП</dt>
-                      <dd className="text-base">{user?.preferences?.preferred_transmission || 'Не указано'}</dd>
+                      <p className="text-sm text-gray-500">Предпочитаемая КПП</p>
+                      <p className="text-base font-medium">{user?.preferences?.preferred_transmission || 'Не указано'}</p>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">Предпочитаемое состояние</dt>
-                      <dd className="text-base">
+                      <p className="text-sm text-gray-500">Предпочитаемое состояние</p>
+                      <p className="text-base font-medium">
                         {user?.preferences?.preferred_condition === 'new' ? 'Новый' :
                          user?.preferences?.preferred_condition === 'used' ? 'С пробегом' :
                          'Не указано'}
-                      </dd>
+                      </p>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">Максимальная цена</dt>
-                      <dd className="text-base">
+                      <p className="text-sm text-gray-500">Максимальная цена</p>
+                      <p className="text-base font-medium">
                         {user?.preferences?.max_price ? `$${user.preferences.max_price}` : 'Не указано'}
-                      </dd>
+                      </p>
                     </div>
-                  </dl>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
-          >
-            Удалить аккаунт
-          </button>
+        <div className="flex justify-end mt-8">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Удалить аккаунт</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Это действие нельзя отменить. Ваш аккаунт будет удален вместе со всеми данными и настройками.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Удалить</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </main>
     </div>
