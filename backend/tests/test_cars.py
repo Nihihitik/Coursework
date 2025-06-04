@@ -121,6 +121,21 @@ def test_update_car(client, seller_auth_header, test_car):
     assert response.status_code == 200
     assert response.json()["price"] == updated_price
 
+def test_update_car_status(client, seller_auth_header, test_car):
+    """Тест обновления статуса автомобиля"""
+    response = client.patch(
+        f"/cars/{test_car.id}/status",
+        json={"status": "inactive"},
+        headers=seller_auth_header
+    )
+    assert response.status_code == 200
+    assert response.json()["message"] == "Статус автомобиля обновлен на inactive"
+
+    # Проверяем, что статус действительно обновился
+    response = client.get(f"/cars/{test_car.id}")
+    assert response.status_code == 200
+    assert response.json()["status"] == "inactive"
+
 def test_delete_car(client, seller_auth_header, test_car, db_session):
     """Тест удаления автомобиля"""
     response = client.delete(

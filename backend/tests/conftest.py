@@ -111,6 +111,7 @@ def test_car(db_session, test_seller, test_store):
         mileage=5000,
         features=features,
         price=30000,
+        status="active",
         seller_id=test_seller.id,
         store_id=test_store.id
     )

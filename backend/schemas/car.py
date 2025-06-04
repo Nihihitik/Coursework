@@ -16,6 +16,7 @@ class Car(Base):
     mileage = Column(Float)
     features = Column(Text)
     price = Column(Float)
+    status = Column(String, default="active")
 
     seller_id = Column(Integer, ForeignKey("sellers.id"))
     store_id = Column(Integer, ForeignKey("stores.id"))
