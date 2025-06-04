@@ -35,3 +35,56 @@ def test_get_profile_unauthorized(client):
     """Тест получения профиля без авторизации"""
     response = client.get("/users/profile")
     assert response.status_code == 401
+
+
+def test_update_buyer_profile(client, test_buyer, buyer_auth_header):
+    """Тест обновления данных покупателя"""
+    response = client.put(
+        "/users/profile",
+        json={"full_name": "Updated Buyer", "contact_info": "000"},
+        headers=buyer_auth_header,
+    )
+    assert response.status_code == 200
+    assert response.json()["message"] == "Профиль успешно обновлен"
+
+    # Проверяем изменения
+    response = client.get("/users/profile", headers=buyer_auth_header)
+    assert response.status_code == 200
+    assert response.json()["full_name"] == "Updated Buyer"
+    assert response.json()["contact_info"] == "000"
+
+
+def test_update_seller_profile(client, test_seller, seller_auth_header):
+    """Тест обновления данных продавца"""
+    response = client.put(
+        "/users/profile",
+        json={"full_name": "Updated Seller"},
+        headers=seller_auth_header,
+    )
+    assert response.status_code == 200
+    assert response.json()["message"] == "Профиль успешно обновлен"
+
+    response = client.get("/users/profile", headers=seller_auth_header)
+    assert response.status_code == 200
+    assert response.json()["full_name"] == "Updated Seller"
+
+
+def test_delete_buyer_profile(client, test_buyer, buyer_auth_header):
+    """Тест удаления аккаунта покупателя"""
+    response = client.delete("/users/profile", headers=buyer_auth_header)
+    assert response.status_code == 200
+    assert response.json()["message"] == "Пользователь удален"
+
+    # После удаления профиль недоступен
+    response = client.get("/users/profile", headers=buyer_auth_header)
+    assert response.status_code == 401
+
+
+def test_delete_seller_profile(client, test_seller, seller_auth_header):
+    """Тест удаления аккаунта продавца"""
+    response = client.delete("/users/profile", headers=seller_auth_header)
+    assert response.status_code == 200
+    assert response.json()["message"] == "Пользователь удален"
+
+    response = client.get("/users/profile", headers=seller_auth_header)
+    assert response.status_code == 401

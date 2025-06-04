@@ -76,6 +76,16 @@ export const getUserProfile = async () => {
   return response.data;
 };
 
+export const updateUserProfile = async (profileData) => {
+  const response = await api.put('/users/profile', profileData);
+  return response.data;
+};
+
+export const deleteUserAccount = async () => {
+  const response = await api.delete('/users/profile');
+  return response.data;
+};
+
 // Функции для работы с автомобилями
 export const getAllCars = async (filters = {}) => {
   const response = await api.get('/cars', { params: filters });
