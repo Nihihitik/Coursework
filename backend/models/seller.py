@@ -24,3 +24,8 @@ class Seller(SellerBase):
 
     class Config:
         from_attributes = True
+class SellerUpdate(BaseModel):
+    """Модель обновления продавца"""
+    full_name: Optional[str] = None
+    contact_info: Optional[str] = None
+

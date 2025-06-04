@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getUserProfile } from '@/lib/api';
+import { getUserProfile, updateUserProfile, deleteUserAccount } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -119,12 +119,27 @@ export default function BuyerProfile() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Здесь должен быть код для отправки обновленных данных на сервер
-    // Но API для обновления профиля пока отсутствует
-    alert('Функциональность обновления профиля пока не реализована на бэкенде');
+    try {
+      const updated = await updateUserProfile(formData);
+      setUser({ ...(user as User), ...updated });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Ошибка при обновлении профиля:', error);
+      alert('Не удалось обновить профиль');
+    }
+  };
 
-    // После успешного обновления переключаем режим редактирования
-    setIsEditing(false);
+  const handleDelete = async () => {
+    if (!confirm('Вы уверены, что хотите удалить аккаунт?')) return;
+    try {
+      await deleteUserAccount();
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_role');
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Ошибка при удалении аккаунта:', error);
+      alert('Не удалось удалить аккаунт');
+    }
   };
 
   if (loading) {
@@ -438,10 +453,13 @@ export default function BuyerProfile() {
           )}
         </div>
 
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-          <p className="text-yellow-700">
-            <strong>Обратите внимание:</strong> Функция обновления профиля в настоящее время находится в разработке. Информация будет доступна только для просмотра до тех пор, пока функция редактирования не будет полностью реализована на бэкенде.
-          </p>
+        <div className="flex justify-between mt-8">
+          <button
+            onClick={handleDelete}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+          >
+            Удалить аккаунт
+          </button>
         </div>
       </main>
     </div>

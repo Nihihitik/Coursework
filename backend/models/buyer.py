@@ -35,3 +35,17 @@ class Buyer(BuyerBase):
 
     class Config:
         from_attributes = True
+class BuyerUpdate(BaseModel):
+    """Модель обновления покупателя"""
+    full_name: Optional[str] = None
+    contact_info: Optional[str] = None
+    preferred_brand: Optional[str] = None
+    preferred_model: Optional[str] = None
+    min_year: Optional[int] = None
+    max_year: Optional[int] = None
+    min_power: Optional[int] = None
+    max_power: Optional[int] = None
+    preferred_transmission: Optional[Union[Transmission, str]] = None
+    preferred_condition: Optional[Union[Condition, str]] = None
+    max_price: Optional[float] = None
+
