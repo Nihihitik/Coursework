@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { getAllCars } from "@/lib/api";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,10 +66,9 @@ export default function Home() {
         if (filters.transmission && filters.transmission !== "all") params.append("transmission", filters.transmission);
         if (filters.max_mileage) params.append("max_mileage", filters.max_mileage.toString());
 
-        // Используем относительный путь для API запросов
-        // Next.js перенаправит этот запрос через прокси, настроенный в next.config.js
-        const response = await axios.get(`/cars?${params.toString()}`);
-        setCars(response.data);
+        const query = Object.fromEntries(params.entries());
+        const carsData = await getAllCars(query);
+        setCars(carsData);
         setError(null);
       } catch (err) {
         console.error("Ошибка при получении списка автомобилей:", err);
