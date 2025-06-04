@@ -7,6 +7,14 @@ import { useRouter } from 'next/navigation';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -156,19 +164,20 @@ export default function SellerDashboard() {
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Панель продавца</h1>
           <div className="flex gap-4">
-            <Link href="/profile" className="text-sm text-gray-600 hover:text-gray-900 transition">
-              Профиль
-            </Link>
-            <button
+            <Button asChild variant="outline" size="sm">
+              <Link href="/profile">Профиль</Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => {
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('user_role');
                 router.push('/auth/login');
               }}
-              className="text-sm text-gray-600 hover:text-gray-900 transition"
             >
               Выйти
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -176,73 +185,125 @@ export default function SellerDashboard() {
       {/* Основной контент */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Приветствие */}
-        <div className="bg-white shadow-sm rounded-lg p-6 mb-6 border border-gray-200">
-          <h2 className="text-2xl font-semibold mb-3">Добрый день, {user?.name || 'Продавец'}</h2>
-          <p className="text-gray-600">Управляйте вашими автомобилями и следите за статистикой продаж.</p>
-        </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-2xl">Добрый день, {user?.name || 'Продавец'}</CardTitle>
+            <CardDescription>
+              Управляйте вашими автомобилями и следите за статистикой продаж.
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
         {/* Карточки с разделами */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Мои автомобили */}
           <Link href="/dashboard/seller/cars" className="block">
-            <div className="bg-white shadow-sm hover:shadow-md rounded-lg p-6 transition duration-200 border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-medium">Мои автомобили</h3>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+            <Card className="hover:shadow-md transition">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 mb-2">
+                <CardTitle className="text-xl">Мои автомобили</CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-muted-foreground"
+                >
                   <rect x="2" y="4" width="20" height="16" rx="2" />
                   <line x1="6" y1="12" x2="18" y2="12" />
                 </svg>
-              </div>
-              <p className="text-gray-600">Управляйте существующими объявлениями о продаже автомобилей.</p>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Управляйте существующими объявлениями о продаже автомобилей.
+                </p>
+              </CardContent>
+            </Card>
           </Link>
 
           {/* Добавить автомобиль */}
           <Link href="/dashboard/seller/cars/add" className="block">
-            <div className="bg-white shadow-sm hover:shadow-md rounded-lg p-6 transition duration-200 border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-medium">Добавить автомобиль</h3>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+            <Card className="hover:shadow-md transition">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 mb-2">
+                <CardTitle className="text-xl">Добавить автомобиль</CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-muted-foreground"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="16" />
                   <line x1="8" y1="12" x2="16" y2="12" />
                 </svg>
-              </div>
-              <p className="text-gray-600">Создайте новое объявление о продаже автомобиля.</p>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Создайте новое объявление о продаже автомобиля.
+                </p>
+              </CardContent>
+            </Card>
           </Link>
 
           {/* Профиль */}
           <Link href="/profile" className="block">
-            <div className="bg-white shadow-sm hover:shadow-md rounded-lg p-6 transition duration-200 border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-medium">Профиль</h3>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+            <Card className="hover:shadow-md transition">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 mb-2">
+                <CardTitle className="text-xl">Профиль</CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-muted-foreground"
+                >
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-              </div>
-              <p className="text-gray-600">Управляйте вашими личными данными и настройками.</p>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Управляйте вашими личными данными и настройками.
+                </p>
+              </CardContent>
+            </Card>
           </Link>
         </div>
 
         {/* Последние добавленные автомобили */}
-        <div className="bg-white shadow-sm rounded-lg p-6 mb-6 border border-gray-200">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">Ваши автомобили</h3>
-            <Link href="/dashboard/seller/cars" className="text-gray-600 hover:text-gray-900 text-sm">
-              Показать все
-            </Link>
-          </div>
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-xl">Ваши автомобили</CardTitle>
+            <Button variant="link" asChild size="sm" className="px-0">
+              <Link href="/dashboard/seller/cars">Показать все</Link>
+            </Button>
+          </CardHeader>
 
           {cars.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">У вас пока нет добавленных автомобилей</p>
-              <Link href="/dashboard/seller/cars/add" className="inline-block bg-gray-800 hover:bg-black text-white font-medium py-2 px-4 rounded-md transition">
-                Добавить первый автомобиль
-              </Link>
-            </div>
+            <Alert className="text-center py-8">
+              <AlertTitle className="mb-2">У вас пока нет добавленных автомобилей</AlertTitle>
+              <AlertDescription className="mb-4">
+                Добавьте свой первый автомобиль для продажи.
+              </AlertDescription>
+              <Button asChild>
+                <Link href="/dashboard/seller/cars/add">Добавить первый автомобиль</Link>
+              </Button>
+            </Alert>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -326,7 +387,7 @@ export default function SellerDashboard() {
               </table>
             </div>
           )}
-        </div>
+        </Card>
       </main>
 
       {/* Модальное окно предпросмотра */}
