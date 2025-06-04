@@ -4,9 +4,9 @@ from typing import List, Dict, Any, Optional
 import json
 
 from backend.schemas.database import get_db
-from backend.schemas import Car, Store, Deal
+from backend.schemas import Car, Store, Deal, Favorite
 from backend.models import CarCreate, CarStatusUpdate
-from backend.auth import get_current_seller
+from backend.auth import get_current_seller, get_current_user_optional
 
 router = APIRouter(tags=["cars"])
 
@@ -23,7 +23,8 @@ async def get_all_cars(
     condition: Optional[str] = None,
     transmission: Optional[str] = None,
     max_mileage: Optional[int] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user_optional)
 ):
     """Получить список всех автомобилей с фильтрацией (доступно без авторизации)"""
     query = db.query(Car)
@@ -50,6 +51,11 @@ async def get_all_cars(
 
     cars = query.offset(skip).limit(limit).all()
 
+    favorite_car_ids = set()
+    if current_user and hasattr(current_user, "favorites"):
+        favorite_ids = db.query(Favorite.car_id).filter(Favorite.buyer_id == current_user.id).all()
+        favorite_car_ids = {fid[0] for fid in favorite_ids}
+
     # Преобразуем в словарь с дополнительной информацией
     result = []
     for car in cars:
@@ -74,18 +80,30 @@ async def get_all_cars(
             "price": car.price,
             "seller_name": car.seller.full_name if car.seller else None,
             "store_name": car.store.name if car.store else None,
-            "status": car.status
+            "status": car.status,
+            "is_favorite": car.id in favorite_car_ids
         }
         result.append(car_dict)
 
     return result
 
 @router.get("/{car_id}", response_model=Dict[str, Any])
-async def get_car_details(car_id: int, db: Session = Depends(get_db)):
+async def get_car_details(
+    car_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user_optional)
+):
     """Получить детальную информацию об автомобиле (доступно без авторизации)"""
     car = db.query(Car).filter(Car.id == car_id).first()
     if not car:
         raise HTTPException(status_code=404, detail="Автомобиль не найден")
+
+    is_favorite = False
+    if current_user and hasattr(current_user, "favorites"):
+        is_favorite = db.query(Favorite).filter(
+            Favorite.buyer_id == current_user.id,
+            Favorite.car_id == car_id
+        ).first() is not None
 
     # Десериализуем features из JSON строки в список
     features = None
@@ -107,6 +125,7 @@ async def get_car_details(car_id: int, db: Session = Depends(get_db)):
         "features": features,
         "price": car.price,
         "status": car.status,
+        "is_favorite": is_favorite,
         "seller": {
             "name": car.seller.full_name,
             "contact_info": car.seller.contact_info
