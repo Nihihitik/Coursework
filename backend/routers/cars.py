@@ -5,7 +5,7 @@ import json
 
 from backend.schemas.database import get_db
 from backend.schemas import Car, Store, Deal
-from backend.models import CarCreate
+from backend.models import CarCreate, CarStatusUpdate
 from backend.auth import get_current_seller
 
 router = APIRouter(tags=["cars"])
@@ -192,7 +192,7 @@ async def update_car(
 @router.patch("/{car_id}/status", response_model=Dict[str, Any])
 async def update_car_status(
     car_id: int,
-    status: str,
+    status_update: CarStatusUpdate,
     current_user = Depends(get_current_seller),
     db: Session = Depends(get_db)
 ):
@@ -203,6 +203,8 @@ async def update_car_status(
 
     if car.seller_id != current_user.id:
         raise HTTPException(status_code=403, detail="У вас нет прав на обновление этого автомобиля")
+
+    status = status_update.status
 
     valid_statuses = ["active", "inactive", "sold"]
     if status not in valid_statuses:

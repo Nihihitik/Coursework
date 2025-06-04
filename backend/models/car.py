@@ -39,3 +39,8 @@ class Car(CarBase):
 
     class Config:
         from_attributes = True
+
+
+class CarStatusUpdate(BaseModel):
+    """Модель для обновления статуса автомобиля"""
+    status: str
