@@ -1,31 +1,47 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getUserFavorites, removeFromFavorites } from '@/lib/api';
+import { getUserFavorites, removeFromFavorites, getCarById } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
-// Определение типа автомобиля
+// Определение типа автомобиля, соответствующее структуре бэкенда
 interface Car {
   id: number;
-  make?: string;
-  model?: string;
-  year?: number;
-  price?: number;
-  mileage?: number;
+  brand: string;
+  model: string;
+  year: number;
+  price: number;
+  mileage: number;
   fuel_type?: string;
-  transmission?: string;
+  transmission: string;
+  condition?: string;
+  power?: number;
+  features?: string[];
   color?: string;
   image_url?: string;
   is_favorite?: boolean;
   status?: 'active' | 'inactive' | 'sold';
+  added_at?: string;
 }
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -41,6 +57,7 @@ export default function FavoritesPage() {
 
         setLoading(true);
         const favoritesData = await getUserFavorites();
+        console.log("Избранные автомобили:", favoritesData);
         setFavorites(favoritesData);
       } catch (error) {
         console.error('Ошибка при загрузке избранного:', error);
@@ -58,6 +75,7 @@ export default function FavoritesPage() {
   const handleRemoveFromFavorites = async (carId: number) => {
     try {
       await removeFromFavorites(carId);
+      toast.success("Удалено из избранного");
 
       // Обновляем состояние списка избранного
       setFavorites(prevFavorites =>
@@ -65,6 +83,23 @@ export default function FavoritesPage() {
       );
     } catch (error) {
       console.error('Ошибка при удалении из избранного:', error);
+      toast.error("Не удалось удалить из избранного");
+    }
+  };
+
+  const openCarDetails = async (carId: number) => {
+    try {
+      setModalLoading(true);
+      setIsModalOpen(true);
+
+      // Получаем полную информацию об автомобиле
+      const carDetails = await getCarById(carId);
+      setSelectedCar(carDetails);
+    } catch (error) {
+      console.error('Ошибка при загрузке данных автомобиля:', error);
+      toast.error("Не удалось загрузить данные автомобиля");
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -82,6 +117,11 @@ export default function FavoritesPage() {
       default:
         return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">В продаже</Badge>;
     }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Нет данных';
+    return new Date(dateString).toLocaleDateString('ru-RU');
   };
 
   return (
@@ -129,7 +169,7 @@ export default function FavoritesPage() {
                     {car.image_url ? (
                       <img
                         src={car.image_url}
-                        alt={`${car.make} ${car.model}`}
+                        alt={`${car.brand} ${car.model}`}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -142,11 +182,12 @@ export default function FavoritesPage() {
                   {/* Информация */}
                   <div className="flex-grow">
                     <div className="flex justify-between">
-                      <Link href={`/cars/${car.id}`}>
-                        <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
-                          {car.make} {car.model}, {car.year}
-                        </h3>
-                      </Link>
+                      <button
+                        onClick={() => openCarDetails(car.id)}
+                        className="text-left text-lg font-semibold text-gray-900 hover:text-blue-600"
+                      >
+                        {car.brand} {car.model}, {car.year}
+                      </button>
                       <button
                         onClick={() => handleRemoveFromFavorites(car.id)}
                         className="text-gray-400 hover:text-red-500 transition"
@@ -178,7 +219,7 @@ export default function FavoritesPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-3">
                       <div>
                         <p className="text-sm text-gray-500">Год выпуска</p>
-                        <p className="text-sm font-medium">{car.year}</p>
+                        <p className="text-sm font-medium">{car.year || 'Не указан'}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Пробег</p>
@@ -190,25 +231,25 @@ export default function FavoritesPage() {
                           {car.transmission === 'automatic' ? 'Автомат' :
                            car.transmission === 'manual' ? 'Механика' :
                            car.transmission === 'robot' ? 'Робот' :
-                           car.transmission === 'variator' ? 'Вариатор' : car.transmission}
+                           car.transmission === 'variator' ? 'Вариатор' : car.transmission || 'Не указана'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Топливо</p>
+                        <p className="text-sm text-gray-500">Состояние</p>
                         <p className="text-sm font-medium">
-                          {car.fuel_type === 'petrol' ? 'Бензин' :
-                           car.fuel_type === 'diesel' ? 'Дизель' :
-                           car.fuel_type === 'gas' ? 'Газ' :
-                           car.fuel_type === 'hybrid' ? 'Гибрид' :
-                           car.fuel_type === 'electric' ? 'Электро' : car.fuel_type}
+                          {car.condition === 'new' ? 'Новый' :
+                           car.condition === 'used' ? 'Б/у' : car.condition || 'Не указано'}
                         </p>
                       </div>
                     </div>
 
                     <div className="mt-4">
-                      <Link href={`/cars/${car.id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                      <button
+                        onClick={() => openCarDetails(car.id)}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
                         Подробнее
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -217,6 +258,121 @@ export default function FavoritesPage() {
           </div>
         )}
       </main>
+
+      {/* Модальное окно с подробностями */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {modalLoading ? (
+            <div className="h-48 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+            </div>
+          ) : selectedCar ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedCar.brand} {selectedCar.model}, {selectedCar.year}</DialogTitle>
+                <DialogDescription className="flex items-center gap-3 mt-2">
+                  <span className="text-xl font-bold">{selectedCar.price.toLocaleString()} ₽</span>
+                  {getStatusBadge(selectedCar.status)}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div>
+                  <div className="aspect-video bg-gray-200 rounded-md overflow-hidden">
+                    {selectedCar.image_url ? (
+                      <img
+                        src={selectedCar.image_url}
+                        alt={`${selectedCar.brand} ${selectedCar.model}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">
+                        Фото отсутствует
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Характеристики</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-sm text-gray-500">Год выпуска</p>
+                      <p className="font-medium">{selectedCar.year}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Пробег</p>
+                      <p className="font-medium">{selectedCar.mileage.toLocaleString()} км</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">КПП</p>
+                      <p className="font-medium">
+                        {selectedCar.transmission === 'automatic' ? 'Автомат' :
+                         selectedCar.transmission === 'manual' ? 'Механика' :
+                         selectedCar.transmission === 'robot' ? 'Робот' :
+                         selectedCar.transmission === 'variator' ? 'Вариатор' : selectedCar.transmission}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Состояние</p>
+                      <p className="font-medium">
+                        {selectedCar.condition === 'new' ? 'Новый' :
+                         selectedCar.condition === 'used' ? 'Б/у' : selectedCar.condition || 'Не указано'}
+                      </p>
+                    </div>
+                    {selectedCar.power && (
+                      <div>
+                        <p className="text-sm text-gray-500">Мощность</p>
+                        <p className="font-medium">{selectedCar.power} л.с.</p>
+                      </div>
+                    )}
+                    {selectedCar.color && (
+                      <div>
+                        <p className="text-sm text-gray-500">Цвет</p>
+                        <p className="font-medium">{selectedCar.color}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-gray-500">Добавлен в избранное</p>
+                      <p className="font-medium">{formatDate(selectedCar.added_at)}</p>
+                    </div>
+                  </div>
+
+                  {selectedCar.features && selectedCar.features.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="font-semibold text-lg mb-2">Особенности</h3>
+                      <ul className="list-disc list-inside space-y-1">
+                        {selectedCar.features.map((feature, index) => (
+                          <li key={index} className="text-sm">{feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-6">
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                  Закрыть
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    handleRemoveFromFavorites(selectedCar.id);
+                    setIsModalOpen(false);
+                  }}
+                >
+                  Удалить из избранного
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              Не удалось загрузить информацию об автомобиле
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

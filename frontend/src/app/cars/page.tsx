@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getAllCars, addCarToFavorites, removeFromFavorites } from '@/lib/api';
+import { getAllCars, addCarToFavorites, removeFromFavorites, getCarById } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 // Интерфейс для автомобиля
 interface Car {
   id: number;
-  make: string;
+  brand: string;
   model: string;
   year: number;
   price: number;
@@ -39,10 +49,13 @@ export default function CarsPage() {
   const [filters, setFilters] = useState<Filters>({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
   const router = useRouter();
 
   // Получаем список производителей для фильтра
-  const makes = cars.length ? [...new Set(cars.map(car => car.make).filter(Boolean))].sort() : [];
+  const makes = cars.length ? [...new Set(cars.map(car => car.brand).filter(Boolean))].sort() : [];
 
   // Получаем минимальную и максимальную цены для фильтра
   const minPriceAvailable = cars.length ? Math.min(...cars.map(car => car.price || 0)) : 0;
@@ -155,6 +168,27 @@ export default function CarsPage() {
       default:
         return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">В продаже</Badge>;
     }
+  };
+
+  const openCarDetails = async (carId: number) => {
+    try {
+      setModalLoading(true);
+      setIsModalOpen(true);
+
+      // Получаем полную информацию об автомобиле
+      const carDetails = await getCarById(carId);
+      setSelectedCar(carDetails);
+    } catch (error) {
+      console.error('Ошибка при загрузке данных автомобиля:', error);
+      toast.error("Не удалось загрузить данные автомобиля");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Нет данных';
+    return new Date(dateString).toLocaleDateString('ru-RU');
   };
 
   return (
@@ -329,7 +363,7 @@ export default function CarsPage() {
                       {car.image_url ? (
                         <img
                           src={car.image_url}
-                          alt={`${car.make} ${car.model}`}
+                          alt={`${car.brand} ${car.model}`}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -358,11 +392,14 @@ export default function CarsPage() {
                       </button>
                     </div>
                     <div className="p-4">
-                      <Link href={`/cars/${car.id}`}>
+                      <button
+                        onClick={() => openCarDetails(car.id)}
+                        className="text-left w-full"
+                      >
                         <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
-                          {car.make} {car.model}
+                          {car.brand} {car.model}
                         </h3>
-                      </Link>
+                      </button>
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-xl font-bold text-gray-900">
                           {car.price ? car.price.toLocaleString() : 'Цена не указана'} ₽
@@ -399,9 +436,12 @@ export default function CarsPage() {
                         </div>
                       </div>
                       <div className="mt-4">
-                        <Link href={`/cars/${car.id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        <button
+                          onClick={() => openCarDetails(car.id)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
                           Подробнее
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -411,6 +451,131 @@ export default function CarsPage() {
           </div>
         </div>
       </main>
+
+      {/* Модальное окно с подробностями */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {modalLoading ? (
+            <div className="h-48 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+            </div>
+          ) : selectedCar ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedCar.brand} {selectedCar.model}, {selectedCar.year}</DialogTitle>
+                <DialogDescription className="flex items-center gap-3 mt-2">
+                  <span className="text-xl font-bold">{selectedCar.price.toLocaleString()} ₽</span>
+                  {getStatusBadge(selectedCar.status)}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div>
+                  <div className="aspect-video bg-gray-200 rounded-md overflow-hidden">
+                    {selectedCar.image_url ? (
+                      <img
+                        src={selectedCar.image_url}
+                        alt={`${selectedCar.brand} ${selectedCar.model}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">
+                        Фото отсутствует
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Характеристики</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-sm text-gray-500">Год выпуска</p>
+                      <p className="font-medium">{selectedCar.year}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Пробег</p>
+                      <p className="font-medium">{selectedCar.mileage.toLocaleString()} км</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">КПП</p>
+                      <p className="font-medium">
+                        {selectedCar.transmission === 'automatic' ? 'Автомат' :
+                         selectedCar.transmission === 'manual' ? 'Механика' :
+                         selectedCar.transmission === 'robot' ? 'Робот' :
+                         selectedCar.transmission === 'variator' ? 'Вариатор' : selectedCar.transmission}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Топливо</p>
+                      <p className="font-medium">
+                        {selectedCar.fuel_type === 'petrol' ? 'Бензин' :
+                         selectedCar.fuel_type === 'diesel' ? 'Дизель' :
+                         selectedCar.fuel_type === 'gas' ? 'Газ' :
+                         selectedCar.fuel_type === 'hybrid' ? 'Гибрид' :
+                         selectedCar.fuel_type === 'electric' ? 'Электро' : selectedCar.fuel_type}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Состояние</p>
+                      <p className="font-medium">
+                        {selectedCar.condition === 'new' ? 'Новый' :
+                         selectedCar.condition === 'used' ? 'Б/у' : selectedCar.condition || 'Не указано'}
+                      </p>
+                    </div>
+                    {selectedCar.power && (
+                      <div>
+                        <p className="text-sm text-gray-500">Мощность</p>
+                        <p className="font-medium">{selectedCar.power} л.с.</p>
+                      </div>
+                    )}
+                    {selectedCar.color && (
+                      <div>
+                        <p className="text-sm text-gray-500">Цвет</p>
+                        <p className="font-medium">{selectedCar.color}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedCar.features && selectedCar.features.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="font-semibold text-lg mb-2">Особенности</h3>
+                      <ul className="list-disc list-inside space-y-1">
+                        {selectedCar.features.map((feature, index) => (
+                          <li key={index} className="text-sm">{feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-6">
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                  Закрыть
+                </Button>
+                <Button
+                  variant={selectedCar.is_favorite ? "destructive" : "default"}
+                  onClick={() => {
+                    toggleFavorite(selectedCar.id);
+                    // Обновляем и выбранный автомобиль
+                    setSelectedCar({
+                      ...selectedCar,
+                      is_favorite: !selectedCar.is_favorite
+                    });
+                  }}
+                >
+                  {selectedCar.is_favorite ? 'Удалить из избранного' : 'Добавить в избранное'}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              Не удалось загрузить информацию об автомобиле
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

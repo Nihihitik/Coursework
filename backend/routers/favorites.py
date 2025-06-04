@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
+import json
 
 from backend.schemas.database import get_db
 from backend.schemas import Favorite, Car
@@ -66,13 +67,29 @@ async def get_favorites(
     result = []
     for fav in favorites:
         car = fav.car
+        # Десериализуем features из JSON строки в список, если они есть
+        features = None
+        if car.features:
+            try:
+                features = json.loads(car.features)
+            except:
+                features = car.features
+
         result.append({
             "id": car.id,
             "brand": car.brand,
             "model": car.model,
             "year": car.year,
             "price": car.price,
-            "added_at": fav.added_at.isoformat()
+            "mileage": car.mileage,
+            "transmission": car.transmission,
+            "condition": car.condition,
+            "power": car.power,
+            "features": features,
+            "color": getattr(car, "color", None),
+            "status": car.status,
+            "added_at": fav.added_at.isoformat(),
+            "is_favorite": True
         })
 
     return result

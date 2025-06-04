@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 // Интерфейс для автомобиля
 interface Car {
   id: number;
-  make: string;
+  brand: string;
   model: string;
   year: number;
   price: number;
@@ -84,12 +84,12 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
       if (car.is_favorite) {
         await removeFromFavorites(car.id);
         toast.success("Удалено из избранного", {
-          description: `${car.make} ${car.model} удален из избранного`,
+          description: `${car.brand} ${car.model} удален из избранного`,
         });
       } else {
         await addCarToFavorites(car.id);
         toast.success("Добавлено в избранное", {
-          description: `${car.make} ${car.model} добавлен в избранное`,
+          description: `${car.brand} ${car.model} добавлен в избранное`,
         });
       }
 
@@ -157,7 +157,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
               </svg>
               К списку автомобилей
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 mt-1">{car.make} {car.model}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mt-1">{car.brand} {car.model}</h1>
           </div>
           <div className="flex gap-4">
             {isLoggedIn ? (
@@ -183,7 +183,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
               {car.image_url ? (
                 <img
                   src={car.image_url}
-                  alt={`${car.make} ${car.model}`}
+                  alt={`${car.brand} ${car.model}`}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -197,7 +197,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
             <div className="w-full md:w-3/5 p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">{car.make} {car.model}, {car.year}</h2>
+                  <h2 className="text-2xl font-semibold text-gray-900">{car.brand} {car.model}, {car.year}</h2>
                   <div className="flex items-center gap-3 mt-2 mb-4">
                     <p className="text-3xl font-bold text-gray-900">{car.price.toLocaleString()} ₽</p>
                     {getStatusBadge(car.status)}
@@ -298,7 +298,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
                 <div key={index} className="h-32 bg-gray-200">
                   <img
                     src={image}
-                    alt={`${car.make} ${car.model} - фото ${index + 1}`}
+                    alt={`${car.brand} ${car.model} - фото ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -321,7 +321,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
             <div className="border-b pb-2">
               <p className="text-sm text-gray-500">Марка</p>
-              <p className="font-medium">{car.make}</p>
+              <p className="font-medium">{car.brand}</p>
             </div>
             <div className="border-b pb-2">
               <p className="text-sm text-gray-500">Модель</p>
