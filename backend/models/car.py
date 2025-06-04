@@ -14,6 +14,7 @@ class CarBase(BaseModel):
     mileage: int
     features: Optional[List[str]] = None
     price: float
+    status: Optional[str] = "active"
 
 class CarCreate(CarBase):
     """Модель для создания автомобиля"""
@@ -24,6 +25,7 @@ class CarInDB(CarBase):
     id: int
     seller_id: int
     store_id: int
+    status: Optional[str] = "active"
 
     class Config:
         from_attributes = True
@@ -33,6 +35,7 @@ class Car(CarBase):
     id: int
     seller_id: int
     store_id: int
+    status: Optional[str] = "active"
 
     class Config:
         from_attributes = True

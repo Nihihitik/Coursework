@@ -73,7 +73,8 @@ async def get_all_cars(
             "features": features,
             "price": car.price,
             "seller_name": car.seller.full_name if car.seller else None,
-            "store_name": car.store.name if car.store else None
+            "store_name": car.store.name if car.store else None,
+            "status": car.status
         }
         result.append(car_dict)
 
@@ -105,6 +106,7 @@ async def get_car_details(car_id: int, db: Session = Depends(get_db)):
         "mileage": car.mileage,
         "features": features,
         "price": car.price,
+        "status": car.status,
         "seller": {
             "name": car.seller.full_name,
             "contact_info": car.seller.contact_info
@@ -141,6 +143,7 @@ async def add_car(
         mileage=car.mileage,
         features=features_json,
         price=car.price,
+        status=car.status or "active",
         seller_id=current_user.id,
         store_id=car.store_id
     )
@@ -185,6 +188,31 @@ async def update_car(
     db.refresh(car)
 
     return {"message": "Информация об автомобиле успешно обновлена"}
+
+@router.patch("/{car_id}/status", response_model=Dict[str, Any])
+async def update_car_status(
+    car_id: int,
+    status: str,
+    current_user = Depends(get_current_seller),
+    db: Session = Depends(get_db)
+):
+    """Обновить статус автомобиля (только владелец автомобиля)"""
+    car = db.query(Car).filter(Car.id == car_id).first()
+    if not car:
+        raise HTTPException(status_code=404, detail="Автомобиль не найден")
+
+    if car.seller_id != current_user.id:
+        raise HTTPException(status_code=403, detail="У вас нет прав на обновление этого автомобиля")
+
+    valid_statuses = ["active", "inactive", "sold"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Недопустимый статус. Допустимые значения: {valid_statuses}")
+
+    car.status = status
+    db.commit()
+    db.refresh(car)
+
+    return {"message": f"Статус автомобиля обновлен на {status}"}
 
 @router.delete("/{car_id}", response_model=Dict[str, Any])
 async def delete_car(
@@ -245,7 +273,8 @@ async def get_seller_cars(
             "mileage": car.mileage,
             "features": features,
             "price": car.price,
-            "store_name": car.store.name if car.store else None
+            "store_name": car.store.name if car.store else None,
+            "status": car.status
         }
         result.append(car_dict)
 
