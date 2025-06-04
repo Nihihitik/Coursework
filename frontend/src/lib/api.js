@@ -94,7 +94,7 @@ export const addCarToFavorites = async (carId) => {
     console.log('Ответ сервера после добавления в избранное:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Ошибка при добавлении автомобиля в избранное:', error);
+    console.error('Ошибка при добавлении автомобиля в збранное:', error);
     if (error.response) {
       console.error('Статус ответа:', error.response.status);
       console.error('Данные ответа:', error.response.data);

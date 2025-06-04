@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getUserProfile, getSellerCars, updateCarStatus, getCarById } from '@/lib/api';
+import { getUserProfile, getSellerCars, updateCarStatus, getCarById, deleteCar } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Eye, PenBox } from "lucide-react";
+import { ChevronDown, Eye, PenBox, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
@@ -45,6 +45,9 @@ export default function SellerCars() {
   const [loading, setLoading] = useState(true);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [carToDelete, setCarToDelete] = useState<Car | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const router = useRouter();
 
   const fetchCars = async () => {
@@ -103,6 +106,35 @@ export default function SellerCars() {
       toast.error("Ошибка", {
         description: "Не удалось обновить статус автомобиля",
       });
+    }
+  };
+
+  const handleDeleteCar = (car: Car) => {
+    setCarToDelete(car);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteCar = async () => {
+    if (!carToDelete) return;
+
+    setDeleteLoading(true);
+    try {
+      await deleteCar(carToDelete.id);
+      toast.success("Автомобиль удален", {
+        description: `Автомобиль ${carToDelete.brand} ${carToDelete.model} успешно удален`,
+      });
+
+      // Удаляем автомобиль из списка
+      setCars(cars.filter(car => car.id !== carToDelete.id));
+      setDeleteDialogOpen(false);
+    } catch (error: any) {
+      console.error('Ошибка при удалении автомобиля:', error);
+      const errorMessage = error.response?.data?.detail || "Не удалось удалить автомобиль";
+      toast.error("Ошибка", {
+        description: errorMessage,
+      });
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -228,6 +260,15 @@ export default function SellerCars() {
                             <PenBox className="h-4 w-4" />
                           </Link>
                         </Button>
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDeleteCar(car)}
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -338,6 +379,32 @@ export default function SellerCars() {
                 </Link>
               </Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Подтверждение удаления</DialogTitle>
+            <DialogDescription>
+              Вы уверены, что хотите удалить автомобиль {carToDelete?.brand} {carToDelete?.model} ({carToDelete?.year} г.)?
+              Это действие нельзя отменить.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Отмена
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteCar}
+              disabled={deleteLoading}
+            >
+              {deleteLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Удалить
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
