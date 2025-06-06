@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import CarDetailsModal from "@/components/CarDetailsModal";
 import { Car as CarIcon, ShieldCheck, Phone } from "lucide-react";
+import AIAssistant from "@/components/AIAssistant";
 
 // Типы данных для автомобилей
 interface Car {
@@ -387,6 +388,9 @@ export default function Home() {
         car={selectedCar}
         loading={modalLoading}
       />
+
+      {/* AI Assistant */}
+      <AIAssistant />
     </main>
   );
 }
