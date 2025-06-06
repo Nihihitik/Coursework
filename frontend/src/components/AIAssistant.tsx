@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageCircle, Send, X, Bot } from "lucide-react";
 // @ts-ignore
-import anime from 'animejs/lib/anime.es.js';
+import anime from 'animejs';
 
 interface Message {
   role: "user" | "assistant";
