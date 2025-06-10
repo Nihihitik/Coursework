@@ -26,3 +26,4 @@ class Car(Base):
 
     favorites = relationship("Favorite", back_populates="car", cascade="all, delete")
     deals = relationship("Deal", back_populates="car", cascade="all, delete")
+    questions = relationship("Question", back_populates="car", cascade="all, delete")

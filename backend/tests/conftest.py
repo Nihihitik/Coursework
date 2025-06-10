@@ -9,7 +9,7 @@ import json
 from backend.schemas.base import Base
 from backend.schemas.database import get_db
 from backend.main import app
-from backend.schemas import Buyer, Seller, Car, Store, Deal, Favorite
+from backend.schemas import Buyer, Seller, Car, Store, Deal, Favorite, Question
 from backend.auth import get_password_hash
 
 # Создание тестовой БД
@@ -147,6 +147,19 @@ def test_deal(db_session, test_buyer, test_car):
     db_session.commit()
     db_session.refresh(deal)
     return deal
+
+@pytest.fixture(scope="function")
+def test_question(db_session, test_buyer, test_car):
+    """Фикстура для создания тестового вопроса"""
+    question = Question(
+        car_id=test_car.id,
+        buyer_id=test_buyer.id,
+        question="Test question"
+    )
+    db_session.add(question)
+    db_session.commit()
+    db_session.refresh(question)
+    return question
 
 @pytest.fixture(scope="function")
 def buyer_auth_header(client, test_buyer):

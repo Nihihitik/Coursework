@@ -6,6 +6,7 @@ from .car import CarBase, CarCreate, CarInDB, Car, CarStatusUpdate
 from .store import StoreBase, StoreCreate, StoreInDB, Store
 from .favorite import FavoriteBase, FavoriteCreate, FavoriteInDB, Favorite
 from .deal import DealBase, DealCreate, DealInDB, Deal
+from .question import QuestionBase, QuestionCreate, QuestionInDB, Question
 
 __all__ = [
     "UserRole", "Transmission", "Condition", "DealStatus",
@@ -15,5 +16,6 @@ __all__ = [
     "CarBase", "CarCreate", "CarInDB", "Car", "CarStatusUpdate",
     "StoreBase", "StoreCreate", "StoreInDB", "Store",
     "FavoriteBase", "FavoriteCreate", "FavoriteInDB", "Favorite",
-    "DealBase", "DealCreate", "DealInDB", "Deal"
+    "DealBase", "DealCreate", "DealInDB", "Deal",
+    "QuestionBase", "QuestionCreate", "QuestionInDB", "Question"
 ]

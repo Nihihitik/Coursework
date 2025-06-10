@@ -24,3 +24,4 @@ class Buyer(Base):
 
     favorites = relationship("Favorite", back_populates="buyer", cascade="all, delete")
     deals = relationship("Deal", back_populates="buyer", cascade="all, delete")
+    questions = relationship("Question", back_populates="buyer", cascade="all, delete")

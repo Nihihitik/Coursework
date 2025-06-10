@@ -7,7 +7,7 @@ from backend.schemas.database import engine
 from backend.schemas.base import Base
 
 # Импорт роутеров
-from backend.routers import auth, cars, users, favorites, deals, stores, queries
+from backend.routers import auth, cars, users, favorites, deals, stores, queries, questions
 
 # Создание всех таблиц при запуске приложения
 Base.metadata.create_all(bind=engine)
@@ -34,6 +34,7 @@ app.include_router(favorites.router, prefix="/favorites", tags=["favorites"])
 app.include_router(deals.router, prefix="/deals", tags=["deals"])
 app.include_router(stores.router, prefix="/stores", tags=["stores"])
 app.include_router(queries.router, prefix="/queries", tags=["queries"])
+app.include_router(questions.router, prefix="/questions", tags=["questions"])
 
 # Подключаем специальный маршрут для получения автомобилей продавца
 @app.get("/seller/cars", tags=["seller"])
