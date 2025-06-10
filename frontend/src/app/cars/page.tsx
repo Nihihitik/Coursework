@@ -199,11 +199,11 @@ export default function CarsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Каталог автомобилей</h1>
           <div className="flex gap-4">
             {isLoggedIn ? (
-              <Link href={`/dashboard/${userRole}`} className="text-sm text-gray-600 hover:text-gray-900 transition">
+              <Link href={`/dashboard/${userRole}`} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 transition">
                 Личный кабинет
               </Link>
             ) : (
-              <Link href="/auth/login" className="text-sm text-gray-600 hover:text-gray-900 transition">
+              <Link href="/auth/login" className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 transition">
                 Войти
               </Link>
             )}
@@ -566,6 +566,30 @@ export default function CarsPage() {
                   }}
                 >
                   {selectedCar.is_favorite ? 'Удалить из избранного' : 'Добавить в избранное'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    if (!isLoggedIn) {
+                      toast.error("Необходима авторизация", {
+                        description: "Для покупки автомобиля необходимо войти в систему",
+                      });
+                      router.push('/auth/login');
+                      return;
+                    }
+
+                    if (userRole !== 'buyer') {
+                      toast.error("Недостаточно прав", {
+                        description: "Только покупатели могут оформить заказ",
+                      });
+                      return;
+                    }
+
+                    setIsModalOpen(false);
+                    router.push(`/cars/${selectedCar.id}/purchase`);
+                  }}
+                >
+                  Приобрести
                 </Button>
               </DialogFooter>
             </>

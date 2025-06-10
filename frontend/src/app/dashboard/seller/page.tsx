@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getUserProfile, getSellerCars, updateCarStatus, getCarById } from '@/lib/api';
+import { getUserProfile, getSellerCars, updateCarStatus, getCarById, getSellerOrders, updateOrderStatus } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Eye, PenBox } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { ChevronDown, Eye, PenBox, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
 // Определяем типы данных
@@ -53,13 +59,27 @@ interface User {
   role: string;
 }
 
+interface Order {
+  id: number;
+  car_id: number;
+  buyer_id: number;
+  seller_id: number;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  created_at: string;
+  buyer_name?: string;
+  buyer_email?: string;
+  car?: Car;
+}
+
 export default function SellerDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [cars, setCars] = useState<Car[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState("cars");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -87,6 +107,20 @@ export default function SellerDashboard() {
         } catch (carsError) {
           console.error('Ошибка при загрузке автомобилей:', carsError);
           setCars([]);
+        }
+
+        // Загружаем заказы продавца
+        try {
+          const ordersData = await getSellerOrders();
+          if (Array.isArray(ordersData)) {
+            setOrders(ordersData);
+          } else {
+            console.error('Данные заказов не являются массивом:', ordersData);
+            setOrders([]);
+          }
+        } catch (ordersError) {
+          console.error('Ошибка при загрузке заказов:', ordersError);
+          setOrders([]);
         }
       } catch (error) {
         console.error('Ошибка при загрузке данных:', error);
@@ -136,6 +170,41 @@ export default function SellerDashboard() {
     }
   };
 
+  const handleOrderStatusChange = async (orderId: number, newStatus: 'approved' | 'rejected') => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+
+      // Обновляем список заказов
+      setOrders(orders.map(order =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ));
+
+      // Если заказ одобрен, обновляем статус автомобиля на "sold"
+      if (newStatus === 'approved') {
+        const order = orders.find(o => o.id === orderId);
+        if (order && order.car_id) {
+          await updateCarStatus(order.car_id, 'sold');
+
+          // Обновляем список автомобилей
+          setCars(cars.map(car =>
+            car.id === order.car_id ? { ...car, status: 'sold' } : car
+          ));
+        }
+      }
+
+      toast.success(
+        newStatus === 'approved'
+          ? "Заказ подтвержден"
+          : "Заказ отклонен"
+      );
+    } catch (error) {
+      console.error('Ошибка при обновлении статуса заказа:', error);
+      toast.error("Ошибка", {
+        description: "Не удалось обновить статус заказа",
+      });
+    }
+  };
+
   const getStatusBadge = (status?: string) => {
     switch(status) {
       case 'active':
@@ -149,6 +218,21 @@ export default function SellerDashboard() {
     }
   };
 
+  const getOrderStatusBadge = (status: string) => {
+    switch(status) {
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Ожидает</Badge>;
+      case 'approved':
+        return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Подтвержден</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Отклонен</Badge>;
+      case 'completed':
+        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Завершен</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-400">Неизвестно</Badge>;
+    }
+  };
+
   const getConditionLabel = (condition?: string) => {
     switch (condition) {
       case 'new':
@@ -158,6 +242,17 @@ export default function SellerDashboard() {
       default:
         return condition || 'Не указано';
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
 
   if (loading) {
@@ -296,109 +391,211 @@ export default function SellerDashboard() {
           </Link>
         </div>
 
-        {/* Последние добавленные автомобили */}
-        <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-xl">Ваши автомобили</CardTitle>
-            <Button variant="link" asChild size="sm" className="px-0">
-              <Link href="/dashboard/seller/cars">Показать все</Link>
-            </Button>
-          </CardHeader>
+        {/* Вкладки с автомобилями и заказами */}
+        <Tabs defaultValue="cars" value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="grid grid-cols-2 w-[400px]">
+            <TabsTrigger value="cars">Автомобили</TabsTrigger>
+            <TabsTrigger value="orders">Заказы</TabsTrigger>
+          </TabsList>
 
-          {cars.length === 0 ? (
-            <Alert className="text-center py-8">
-              <AlertTitle className="mb-2">У вас пока нет добавленных автомобилей</AlertTitle>
-              <AlertDescription className="mb-4">
-                Добавьте свой первый автомобиль для продажи.
-              </AlertDescription>
-              <Button asChild>
-                <Link href="/dashboard/seller/cars/add">Добавить первый автомобиль</Link>
-              </Button>
-            </Alert>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Модель
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Год
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Цена
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Статус
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Действия
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {cars.slice(0, 5).map((car) => (
-                    <tr key={car.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{car.brand} {car.model}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{car.year}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{car.price?.toLocaleString()} ₽</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(car.status)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                Статус <ChevronDown className="ml-1 h-4 w-4" />
+          {/* Вкладка с автомобилями */}
+          <TabsContent value="cars">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-xl">Ваши автомобили</CardTitle>
+                <Button variant="link" asChild size="sm" className="px-0">
+                  <Link href="/dashboard/seller/cars">Показать все</Link>
+                </Button>
+              </CardHeader>
+
+              {cars.length === 0 ? (
+                <Alert className="text-center py-8">
+                  <AlertTitle className="mb-2">У вас пока нет добавленных автомобилей</AlertTitle>
+                  <AlertDescription className="mb-4">
+                    Добавьте свой первый автомобиль для продажи.
+                  </AlertDescription>
+                  <Button asChild>
+                    <Link href="/dashboard/seller/cars/add">Добавить первый автомобиль</Link>
+                  </Button>
+                </Alert>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Модель
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Год
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Цена
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Статус
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Действия
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {cars.slice(0, 5).map((car) => (
+                        <tr key={car.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{car.brand} {car.model}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{car.year}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{car.price?.toLocaleString()} ₽</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {getStatusBadge(car.status)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex justify-end space-x-2">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    Статус <ChevronDown className="ml-1 h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleStatusChange(car.id, 'active')}>
+                                    Активен
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(car.id, 'inactive')}>
+                                    Неактивен
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleStatusChange(car.id, 'sold')}>
+                                    Продан
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handlePreview(car.id)}
+                              >
+                                <Eye className="h-4 w-4" />
                               </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleStatusChange(car.id, 'active')}>
-                                Активен
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleStatusChange(car.id, 'inactive')}>
-                                Неактивен
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleStatusChange(car.id, 'sold')}>
-                                Продан
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
 
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handlePreview(car.id)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                asChild
+                              >
+                                <Link href={`/dashboard/seller/cars/${car.id}/edit`}>
+                                  <PenBox className="h-4 w-4" />
+                                </Link>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          </TabsContent>
 
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            asChild
-                          >
-                            <Link href={`/dashboard/seller/cars/${car.id}/edit`}>
-                              <PenBox className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
+          {/* Вкладка с заказами */}
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Заказы на покупку</CardTitle>
+                <CardDescription>
+                  Управляйте заказами на покупку ваших автомобилей
+                </CardDescription>
+              </CardHeader>
+
+              {orders.length === 0 ? (
+                <Alert className="text-center py-8">
+                  <AlertTitle className="mb-2">У вас пока нет заказов</AlertTitle>
+                  <AlertDescription className="mb-4">
+                    Здесь будут отображаться заказы на покупку ваших автомобилей.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Дата
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Автомобиль
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Покупатель
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Статус
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Действия
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {orders.map((order) => (
+                        <tr key={order.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{formatDate(order.created_at)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {order.car ? `${order.car.brand} ${order.car.model}, ${order.car.year}` : `Автомобиль ID: ${order.car_id}`}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{order.buyer_name || `Покупатель ID: ${order.buyer_id}`}</div>
+                            {order.buyer_email && (
+                              <div className="text-xs text-gray-500">{order.buyer_email}</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {getOrderStatusBadge(order.status)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex justify-end space-x-2">
+                              {order.status === 'pending' && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
+                                    onClick={() => handleOrderStatusChange(order.id, 'approved')}
+                                  >
+                                    <Check className="h-4 w-4 mr-1" /> Подтвердить
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                                    onClick={() => handleOrderStatusChange(order.id, 'rejected')}
+                                  >
+                                    <X className="h-4 w-4 mr-1" /> Отклонить
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Модальное окно предпросмотра */}
