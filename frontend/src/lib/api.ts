@@ -234,6 +234,62 @@ export const getUserProfile = async () => {
   }
 };
 
+// Функция для обновления профиля пользователя
+export const updateUserProfile = async (profileData: Record<string, any>) => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Не авторизован');
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profileData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Ошибка при обновлении профиля');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Ошибка API при обновлении профиля:', error);
+    throw error;
+  }
+};
+
+// Функция для удаления аккаунта пользователя
+export const deleteUserAccount = async () => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Не авторизован');
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Ошибка при удалении аккаунта');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Ошибка API при удалении аккаунта:', error);
+    throw error;
+  }
+};
+
 // Функция для получения автомобилей продавца
 export const getSellerCars = async () => {
   try {
@@ -257,6 +313,150 @@ export const getSellerCars = async () => {
     return await response.json();
   } catch (error) {
     console.error('Ошибка API при получении автомобилей продавца:', error);
+    throw error;
+  }
+};
+
+// Функция для добавления автомобиля
+export const addCar = async (carData: Record<string, any>) => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Не авторизован');
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cars`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(carData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Ошибка при добавлении автомобиля');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Ошибка API при добавлении автомобиля:', error);
+    throw error;
+  }
+};
+
+// Функция для обновления автомобиля
+export const updateCar = async (id: number, carData: Record<string, any>) => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Не авторизован');
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cars/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(carData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Ошибка при обновлении автомобиля');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Ошибка API при обновлении автомобиля:', error);
+    throw error;
+  }
+};
+
+// Функция для удаления автомобиля
+export const deleteCar = async (id: number) => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Не авторизован');
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cars/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Ошибка при удалении автомобиля');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Ошибка API при удалении автомобиля:', error);
+    throw error;
+  }
+};
+
+// Функция для получения списка магазинов
+export const getAllStores = async () => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stores`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error('Ошибка при получении магазинов');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Ошибка API при получении магазинов:', error);
+    throw error;
+  }
+};
+
+// Функция для создания магазина
+export const createStore = async (storeData: { name: string; address: string }) => {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Не авторизован');
+    }
+
+    const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/stores`);
+    url.searchParams.append('name', storeData.name);
+    url.searchParams.append('address', storeData.address);
+
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Ошибка при создании магазина');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Ошибка API при создании магазина:', error);
     throw error;
   }
 };
